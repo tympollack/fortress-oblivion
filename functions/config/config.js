@@ -8,7 +8,6 @@ Object.values(formats).forEach(format => convict.addFormat(format))
 convict.addParser({ extension: ['yml', 'yaml'], parse: yaml.safeLoad})
 
 const config = convict(schema)
-config.loadFile('./config/.env.yml')
 config.validate({ allowed: 'strict' })
 
 module.exports = config

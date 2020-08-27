@@ -15,8 +15,6 @@ routes.put('/:id', addUserById)
 routes.patch('/:id', updateUser)
 routes.delete('/:id', deleteUser)
 
-routes.post('/exists/:username', findByUsername)
-
 module.exports = routes
 
 /////////////////////////////////////////////////////////////////////

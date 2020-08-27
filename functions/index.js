@@ -28,10 +28,18 @@ exports.test = functions.https.onRequest(async(req, res) => {
     res.send('poop')
 })
 
+const internalApiApp = express()
+addExpressMiddleware(internalApiApp)
+const internalApiRouter = express.Router()
+internalApiRouter.use('/users/', require('./internal/users/users'))
+internalApiApp.use(utils.tryCatchAsync)
+internalApiApp.use(internalApiRouter) // must be after others
+exports.internal = functions.https.onRequest(internalApiApp)
+
 const apiApp = express()
-addExpressMiddleware(apiApp)
+apiApp.use(cors)
 const apiRouter = express.Router()
-apiRouter.use('/users/', require('./api/users/users'))
+apiRouter.use('/', require('./api/api'))
 apiApp.use(utils.tryCatchAsync)
 apiApp.use(apiRouter) // must be after others
 exports.api = functions.https.onRequest(apiApp)

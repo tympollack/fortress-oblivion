@@ -30,7 +30,6 @@
           else firebase.auth().signOut().then()
         }
         else this.userId = null
-        console.log('user id:', this.userId)
       })
     }
   }

@@ -10,7 +10,7 @@ module.exports = {
     projectId: {
       doc: 'ID of the project.',
       format: String,
-      default: ''
+      default: 'fortress-oblivion'
     },
   },
 
@@ -18,7 +18,7 @@ module.exports = {
     base: {
       doc: 'Base URL for HATEOAS.',
       format: String,
-      default: ''
+      default: 'https://fortress-oblivion.web.app'
     },
 
     apiPath: {

@@ -64,4 +64,9 @@ node_modules/
 
 # dotenv environment variables file
 .env
+
+# firebase key
 /src/config/firebase-key-no-commit.js
+
+# vue build dir
+dist/
