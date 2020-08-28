@@ -1,7 +1,7 @@
 <template>
   <v-app v-cloak>
     <v-container>
-      <div v-if="userId === ''" />
+      <div v-if="userId === ''" /> <!--  //todo show a something waiting for auth call  -->
       <UserLogin v-else-if="!userId" />
       <AppContent v-else></AppContent>
     </v-container>

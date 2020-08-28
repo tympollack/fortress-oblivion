@@ -4,7 +4,7 @@ const url = shareable.url + '/users'
 const collectionName = shareable.config.firestore.collections.users.name
 const collRef = db.collection(collectionName)
 
-//    /api/users/
+//    /internal/users/
 const routes = require('express').Router()
 
 routes.get('/', queryUsers)
@@ -67,7 +67,7 @@ async function queryUsers(req, res) {
 
 async function addUser(req, res) {
   const body = req.body
-  const id = body.id
+  const { id, username } = body.data
   console.log('POST /users', body)
 
   const doesExist = id && await getUserById(id)
@@ -87,11 +87,11 @@ async function addUser(req, res) {
     maxHealth: 100,
     timerLength: 0,
     timerStart: null,
-    username: body.username
+    username: username
   }
 
-  await collRef.doc(body.userId).set(player)
-  res.status(200).json(player)
+  await collRef.doc(id).set(player)
+  res.status(200).json({ data: player })
 }
 
 async function getUser(req, res) {

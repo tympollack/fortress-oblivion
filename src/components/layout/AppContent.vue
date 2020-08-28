@@ -4,13 +4,13 @@
         @about-click="changeScreen(SCREENS.ABOUT)"
     ></MenuBar>
 
-    <v-layout class="display-area">
+    <v-container class="display-area">
   <!--  i know there's a better way to do this, but i forget right now, so this is temp solution  -->
       <AboutScreen v-if="screen === SCREENS.ABOUT"></AboutScreen>
       <AdventureScreen v-else-if="screen === SCREENS.ADVENTURE"></AdventureScreen>
       <ChatScreen v-else-if="screen === SCREENS.CHAT"></ChatScreen>
       <ChronicleScreen v-else-if="screen === SCREENS.CHRONICLE"></ChronicleScreen>
-    </v-layout>
+    </v-container>
 
     <BottomNav
         :value="makeNullWhenNotBotNavScreen"
