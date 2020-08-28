@@ -18,6 +18,7 @@
               v-model="email"
               :rules="[rules.required, rules.email]"
               label="Email"
+              @keyup.enter="signupEmail()"
           ></v-text-field>
 
           <v-text-field
@@ -27,6 +28,7 @@
               :type="showPass ? 'text' : 'password'"
               label="Password"
               @click:append="showPass = !showPass"
+              @keyup.enter="signupEmail()"
           ></v-text-field>
 
           <v-text-field
@@ -36,6 +38,7 @@
               :type="showPass2 ? 'text' : 'password'"
               label="Confirm Password"
               @click:append="showPass2 = !showPass2"
+              @keyup.enter="signupEmail()"
           ></v-text-field>
 
         </v-form>
