@@ -76,8 +76,22 @@ async function addUser(req, res) {
     return
   }
 
-  await collRef.add(body)
-  res.status(200).send()
+  const player = {
+    chest: 0,
+    equipment: {},
+    gold: 0,
+    hasKey: false,
+    health: 100,
+    level: '1',
+    location: 'village',
+    maxHealth: 100,
+    timerLength: 0,
+    timerStart: null,
+    username: body.username
+  }
+
+  await collRef.doc(body.userId).set(player)
+  res.status(200).json(player)
 }
 
 async function getUser(req, res) {

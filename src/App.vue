@@ -3,12 +3,13 @@
     <v-container>
       <div v-if="userId === ''" />
       <UserLogin v-else-if="!userId" />
-      <div v-else>user logged in</div>
+      <AppContent v-else></AppContent>
     </v-container>
   </v-app>
 </template>
 
 <script>
+  import AppContent from './components/layout/AppContent'
   import UserLogin from './components/login/UserLogin'
   import firebase from './config/firebase'
 
@@ -16,6 +17,7 @@
     name: "App",
 
     components: {
+      AppContent,
       UserLogin
     },
 

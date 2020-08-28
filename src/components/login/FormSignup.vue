@@ -38,12 +38,6 @@
               @click:append="showPass2 = !showPass2"
           ></v-text-field>
 
-          <v-text-field
-              v-model="username"
-              :rules="[rules.required]"
-              label="Star Realms IGN"
-          ></v-text-field>
-
         </v-form>
       </v-flex>
 
@@ -65,7 +59,6 @@
       password2: null,
       showPass: false,
       showPass2: false,
-      username: null,
       errorMessage: '',
       rules: {
         required: v => !!v || 'Required',
@@ -93,11 +86,6 @@
         if (!this.valid) return
 
         try {
-          const userExistenceResponse = await this.$firebase.functions().httpsCallable(`api/users/exists/${this.username}`)();
-          if (userExistenceResponse.data) {
-            this.errorMessage = 'Username taken.'
-            return
-          }
           await this.$firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
           await this.$firebase.auth().currentUser.sendEmailVerification()
           this.errorMessage = 'Check your email for account verification.'
