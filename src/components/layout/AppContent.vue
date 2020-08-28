@@ -1,22 +1,22 @@
 <template>
   <v-container class="wrapper ma-0 pa-0">
     <MenuBar
-        @about-click="changeScreen(SCREENS.ABOUT)"
+        @about-click="screen = SCREEN.ABOUT"
     ></MenuBar>
 
     <v-container class="display-area">
   <!--  i know there's a better way to do this, but i forget right now, so this is temp solution  -->
-      <AboutScreen v-if="screen === SCREENS.ABOUT"></AboutScreen>
-      <AdventureScreen v-else-if="screen === SCREENS.ADVENTURE"></AdventureScreen>
-      <ChatScreen v-else-if="screen === SCREENS.CHAT"></ChatScreen>
-      <ChronicleScreen v-else-if="screen === SCREENS.CHRONICLE"></ChronicleScreen>
+      <AboutScreen v-if="screen === SCREEN.ABOUT"></AboutScreen>
+      <AdventureScreen v-else-if="screen === SCREEN.ADVENTURE"></AdventureScreen>
+      <ChatScreen v-else-if="screen === SCREEN.CHAT"></ChatScreen>
+      <ChronicleScreen v-else-if="screen === SCREEN.CHRONICLE"></ChronicleScreen>
     </v-container>
 
     <BottomNav
-        :value="makeNullWhenNotBotNavScreen"
-        @adventure-click="changeScreen(SCREENS.ADVENTURE)"
-        @chat-click="changeScreen(SCREENS.CHAT)"
-        @chronicle-click="changeScreen(SCREENS.CHRONICLE)"
+        :value="screen"
+        @adventure-click="screen = SCREEN.ADVENTURE"
+        @chat-click="screen = SCREEN.CHAT"
+        @chronicle-click="screen = SCREEN.CHRONICLE"
     ></BottomNav>
   </v-container>
 </template>
@@ -33,14 +33,13 @@
     name: 'AppContent',
 
     data: () => ({
-      SCREENS: {
-        ABOUT: 'about',
-        ADVENTURE: 'adventure',
-        CHAT: 'chat',
-        CHRONICLE: 'chronicle',
+      SCREEN: {
+        ABOUT: 0,
+        ADVENTURE: 1,
+        CHAT: 3,
+        CHRONICLE: 2,
       },
-      screen: 'adventure',
-      makeNullWhenNotBotNavScreen: 1
+      screen: 1,
     }),
 
     components: {
@@ -51,16 +50,6 @@
       ChronicleScreen,
       MenuBar
     },
-
-    methods: {
-      changeScreen(screen) {
-        this.screen = screen
-
-        if ([this.SCREENS.ABOUT].includes(screen)) {
-          this.makeNullWhenNotBotNavScreen = 0
-        }
-      }
-    }
   }
 </script>
 

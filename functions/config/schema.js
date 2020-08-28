@@ -122,6 +122,18 @@ module.exports = {
             }
           },
 
+          id: {
+            doc: 'ties to firebase id',
+            name: {
+              format: String,
+              default: 'id'
+            },
+            path: {
+              format: String,
+              default: 'users/{id}'
+            }
+          },
+
           hasKey: {
             doc: 'whether key is in hand',
             name: {
@@ -131,18 +143,6 @@ module.exports = {
             path: {
               format: String,
               default: 'users/{hasKey}'
-            }
-          },
-
-          hasSeenNotification: {
-            doc: 'whether notification has been seen',
-            name: {
-              format: Boolean,
-              default: 'hasSeenNotification'
-            },
-            path: {
-              format: String,
-              default: 'users/{hasSeenNotification}'
             }
           },
 
@@ -191,6 +191,42 @@ module.exports = {
             path: {
               format: String,
               default: 'users/{maxHealth}'
+            }
+          },
+
+          potion: {
+            doc: 'potion hp amount',
+            name: {
+              format: Number,
+              default: 'potion'
+            },
+            path: {
+              format: String,
+              default: 'users/{potion}'
+            }
+          },
+
+          status: {
+            doc: 'status',
+            name: {
+              format: String,
+              default: 'status'
+            },
+            path: {
+              format: String,
+              default: 'users/{status}'
+            },
+          },
+
+          timerLength: {
+            doc: 'amount of time in seconds for timer',
+            name: {
+              format: Number,
+              default: 'timerLength'
+            },
+            path: {
+              format: String,
+              default: 'users/{timerLength}'
             }
           },
 

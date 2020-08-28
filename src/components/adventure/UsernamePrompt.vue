@@ -35,10 +35,7 @@
           return
         }
 
-        await this.$firebase.functions().httpsCallable(`internal/users/`)({
-          id: this.$firebase.auth().currentUser.uid,
-          username: this.username
-        })
+        await this.$functions('users/', { username: this.username })
       }
     }
   }

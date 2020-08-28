@@ -31,6 +31,8 @@ exports.test = functions.https.onRequest(async(req, res) => {
 const internalApiApp = express()
 addExpressMiddleware(internalApiApp)
 const internalApiRouter = express.Router()
+internalApiRouter.use('/actions/', require('./internal/actions/actions'))
+internalApiRouter.use('/game-events/', require('./internal/game-events/game-events'))
 internalApiRouter.use('/users/', require('./internal/users/users'))
 internalApiApp.use(utils.tryCatchAsync)
 internalApiApp.use(internalApiRouter) // must be after others
