@@ -9,6 +9,7 @@ import '@mdi/font/css/materialdesignicons.css'
 
 Vue.config.productionTip = false
 Vue.prototype.$firebase = firebase
+Vue.prototype.$timestamp = firebase.firestore.FieldValue.serverTimestamp()
 Vue.prototype.$functions = async (path, data = {}) => {
     return await firebase.functions().httpsCallable(`internal/${path}`)({
         ...data,

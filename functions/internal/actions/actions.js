@@ -17,11 +17,13 @@ routes.use(async (req, res, next) => {
   const id = req.body.data.id
   const user = await getUserById(id)
   if (user) {
+    collRef.doc(id).collection('version-history').doc(Date.now() + '').set(user)
+
     req.playerUser = user
     const start = Date.now();
     const ret = await next()
-    console.log(req.path, 'finished in', Date.now() - start, 'ms')
     res.status(200).json({ data: ret || {} })
+    console.log(req.path, 'finished in', Date.now() - start, 'ms')
   } else {
     console.error('user id not found', id)
     res.status(404).send()
@@ -42,6 +44,17 @@ function getUserById(id) {
 }
 
 async function markManualRead(req, res) {
-  const user = req.playerUser
-  await collRef.doc(user.id).update({ [collectionFields.status.name]: 'deciding' })
+  await collRef
+      .doc(req.playerUser.id)
+      .update({ [collectionFields.status.name]: 'deciding' })
+}
+
+async function goToTower(req, res) {
+  console.log(this.$timestamp)
+  await collRef
+      .doc(req.playerUser.id)
+      .update({
+        [collectionFields.timerLength.name]: 600,
+        [collectionFields.timerStart.name]: this.$timestamp
+      })
 }
