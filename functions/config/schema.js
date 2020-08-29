@@ -77,7 +77,7 @@ module.exports = {
           },
 
           equipment: {
-            doc: 'player items held',
+            doc: 'array of player items held',
             name: {
               format: String,
               default: 'equipment'
@@ -89,7 +89,7 @@ module.exports = {
             quantity: {
               doc: '# items',
               name: {
-                format: Number,
+                format: String,
                 default: 'quantity'
               },
               path: {
@@ -113,7 +113,7 @@ module.exports = {
           gold: {
             doc: 'gold amount',
             name: {
-              format: Number,
+              format: String,
               default: 'gold'
             },
             path: {
@@ -137,7 +137,7 @@ module.exports = {
           hasKey: {
             doc: 'whether key is in hand',
             name: {
-              format: Boolean,
+              format: String,
               default: 'hasKey'
             },
             path: {
@@ -149,7 +149,7 @@ module.exports = {
           health: {
             doc: 'current health',
             name: {
-              format: Number,
+              format: String,
               default: 'health'
             },
             path: {
@@ -185,12 +185,58 @@ module.exports = {
           maxHealth: {
             doc: 'max health',
             name: {
-              format: Number,
+              format: String,
               default: 'maxHealth'
             },
             path: {
               format: String,
               default: 'users/{maxHealth}'
+            }
+          },
+
+          options: {
+            doc: 'array of available player options',
+            name: {
+              format: String,
+              default: 'options'
+            },
+            path: {
+              format: String,
+              default: 'users/{options}'
+            },
+            apiPath: {
+              doc: 'api path of option',
+              name: {
+                format: String,
+                default: 'apiPath'
+              },
+              path: {
+                format: String,
+                default: 'users/options/{apiPath}'
+              }
+            },
+            description: {
+              doc: 'text description of option',
+              name: {
+                format: String,
+                default: 'description'
+              },
+              path: {
+                format: String,
+                default: 'users/options/{description}'
+              }
+            },
+          },
+
+          optionsTitle: {
+            doc: 'title of options list',
+            name: {
+              format: String,
+              default: 'optionsTitle'
+            },
+            path: {
+              format: String,
+              default: 'users/{optionsTitle}'
             }
           },
 
@@ -221,7 +267,7 @@ module.exports = {
           timerLength: {
             doc: 'amount of time in seconds for timer',
             name: {
-              format: Number,
+              format: String,
               default: 'timerLength'
             },
             path: {

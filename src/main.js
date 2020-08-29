@@ -11,17 +11,21 @@ Vue.config.productionTip = false
 Vue.prototype.$firebase = firebase
 Vue.prototype.$timestamp = firebase.firestore.FieldValue.serverTimestamp()
 Vue.prototype.$functions = async (path, data = {}) => {
+  try {
     return await firebase.functions().httpsCallable(`internal/${path}`)({
-        ...data,
-        id: firebase.auth().currentUser.uid
+      ...data,
+      id: firebase.auth().currentUser.uid
     })
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 Vue.use(Vuex)
 Vue.use(Vue2Filters)
 
 new Vue({
-    // store,
-    vuetify,
-    render: h => h(App),
+  // store,
+  vuetify,
+  render: h => h(App),
 }).$mount('#app')

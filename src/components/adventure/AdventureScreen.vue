@@ -9,10 +9,22 @@
   <div v-else>
     <PlayerInfo :player="player"></PlayerInfo>
 
-    <PlayerDeciding v-if="player.status === STATUS.DECIDING"></PlayerDeciding>
-    <PlayerFighting v-else-if="player.status === STATUS.FIGHTING"></PlayerFighting>
-    <PlayerQueueing v-else-if="player.status === STATUS.QUEUEING"></PlayerQueueing>
-    <PlayerTimer v-else-if="player.status === STATUS.TIMING"></PlayerTimer>
+    <PlayerDeciding
+        v-if="player.status === STATUS.DECIDING"
+        :player="player"
+    ></PlayerDeciding>
+    <PlayerFighting
+        v-else-if="player.status === STATUS.FIGHTING"
+        :player="player"
+    ></PlayerFighting>
+    <PlayerQueueing
+        v-else-if="player.status === STATUS.QUEUEING"
+        :player="player"
+    ></PlayerQueueing>
+    <PlayerTiming
+        v-else-if="player.status === STATUS.TIMING"
+        :player="player"
+    ></PlayerTiming>
   </div>
 </template>
 
@@ -22,7 +34,7 @@
   import PlayerFighting from './PlayerFighting'
   import PlayerInfo from './PlayerInfo'
   import PlayerQueueing from './PlayerQueueing'
-  import PlayerTimer from './PlayerTimer'
+  import PlayerTiming from './PlayerTiming'
   import UsernamePrompt from './UsernamePrompt'
 
   export default {
@@ -34,7 +46,7 @@
       PlayerFighting,
       PlayerInfo,
       PlayerQueueing,
-      PlayerTimer,
+      PlayerTiming,
       UsernamePrompt
     },
 
@@ -49,6 +61,18 @@
       player: null,
       needUsername: false
     }),
+
+    watch: {
+      player: {
+        handler(newVal, oldVal) {
+          if (oldVal && oldVal.status !== this.STATUS.DECIDING
+              && newVal.status === this.STATUS.DECIDING) {
+            this.$functions('actions/generate-options')
+          }
+        },
+        deep: true
+      }
+    },
 
     created() {
       const userId = this.$firebase.auth().currentUser.uid
