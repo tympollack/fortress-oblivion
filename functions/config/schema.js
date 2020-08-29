@@ -110,6 +110,30 @@ module.exports = {
             },
           },
 
+          fightingSince: {
+            doc: 'time started fight',
+            name: {
+              format: String,
+              default: 'fightingSince'
+            },
+            path: {
+              format: String,
+              default: 'users/{fightingSince}'
+            }
+          },
+
+          encounterId: {
+            doc: 'current encounter id',
+            name: {
+              format: String,
+              default: 'encounterId'
+            },
+            path: {
+              format: String,
+              default: 'users/{encounterId}'
+            }
+          },
+
           gold: {
             doc: 'gold amount',
             name: {
@@ -194,6 +218,18 @@ module.exports = {
             }
           },
 
+          numEncounters: {
+            doc: 'amount of encounters',
+            name: {
+              format: String,
+              default: 'numEncounters'
+            },
+            path: {
+              format: String,
+              default: 'users/{numEncounters}'
+            }
+          },
+
           options: {
             doc: 'array of available player options',
             name: {
@@ -243,12 +279,24 @@ module.exports = {
           potion: {
             doc: 'potion hp amount',
             name: {
-              format: Number,
+              format: String,
               default: 'potion'
             },
             path: {
               format: String,
               default: 'users/{potion}'
+            }
+          },
+
+          queuedSince: {
+            doc: 'time entered queue',
+            name: {
+              format: String,
+              default: 'queuedSince'
+            },
+            path: {
+              format: String,
+              default: 'users/{queuedSince}'
             }
           },
 
@@ -297,6 +345,230 @@ module.exports = {
             path: {
               format: String,
               default: 'users/{username}'
+            }
+          },
+        }
+      },
+
+      world: {
+        name: {
+          format: String,
+          default: 'world'
+        },
+
+        id: {
+          name: {
+            format: String,
+            default: 'id'
+          },
+          path: {
+            format: String,
+            default: 'world/{id}'
+          }
+        },
+
+        reserved: {
+          state: {
+            format: String,
+            default: 'state'
+          }
+        },
+
+        fields: {
+          numQueued: {
+            doc: 'number of players seeking encounter in the fortress',
+            name: {
+              format: String,
+              default: 'numQueued'
+            },
+            path: {
+              format: String,
+              default: 'world/{numQueued}'
+            }
+          },
+        }
+      },
+
+      queue: {
+        name: {
+          format: String,
+          default: 'queue'
+        },
+
+        id: {
+          name: {
+            format: String,
+            default: 'id'
+          },
+          path: {
+            format: String,
+            default: 'queue/{id}'
+          }
+        },
+
+        fields: {
+        }
+      },
+
+      encounters: {
+        name: {
+          format: String,
+          default: 'encounters'
+        },
+
+        id: {
+          name: {
+            format: String,
+            default: 'id'
+          },
+          path: {
+            format: String,
+            default: 'encounters/{id}'
+          }
+        },
+
+        fields: {
+          end: {
+            doc: 'end',
+            name: {
+              format: String,
+              default: 'end'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{end}'
+            }
+          },
+
+          format: {
+            doc: 'format',
+            name: {
+              format: String,
+              default: 'format'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{format}'
+            }
+          },
+
+          loser: {
+            doc: 'loser id',
+            name: {
+              format: String,
+              default: 'loser'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{loser}'
+            }
+          },
+
+          playPace: {
+            doc: 'pace of play option',
+            name: {
+              format: String,
+              default: 'playPace'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{playPace}'
+            }
+          },
+
+          player1Id: {
+            doc: 'player1 id',
+            name: {
+              format: String,
+              default: 'player1Id'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{player1Id}'
+            }
+          },
+
+          player1: {
+            doc: 'player1',
+            name: {
+              format: String,
+              default: 'player1'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{player1}'
+            }
+          },
+
+          player2Id: {
+            doc: 'player2 id',
+            name: {
+              format: String,
+              default: 'player2Id'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{player2Id}'
+            }
+          },
+
+          player2: {
+            doc: 'player2',
+            name: {
+              format: String,
+              default: 'player2'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{player2}'
+            }
+          },
+
+          result: {
+            doc: 'result',
+            name: {
+              format: String,
+              default: 'result'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{result}'
+            }
+          },
+
+          resultConfirmed: {
+            doc: 'result confirmed by opponent',
+            name: {
+              format: String,
+              default: 'resultConfirmed'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{resultConfirmed}'
+            }
+          },
+
+          start: {
+            doc: 'start time',
+            name: {
+              format: String,
+              default: 'start'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{start}'
+            }
+          },
+
+          winner: {
+            doc: 'winner id',
+            name: {
+              format: String,
+              default: 'winner'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{winner}'
             }
           },
         }
