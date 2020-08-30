@@ -251,15 +251,26 @@ module.exports = {
                 default: 'users/options/{apiPath}'
               }
             },
-            description: {
-              doc: 'text description of option',
+            heading: {
+              doc: 'option heading',
               name: {
                 format: String,
-                default: 'description'
+                default: 'heading'
               },
               path: {
                 format: String,
-                default: 'users/options/{description}'
+                default: 'users/options/{heading}'
+              }
+            },
+            subheading: {
+              doc: 'option subheading',
+              name: {
+                format: String,
+                default: 'subheading'
+              },
+              path: {
+                format: String,
+                default: 'users/options/{subheading}'
               }
             },
           },
@@ -310,6 +321,18 @@ module.exports = {
               format: String,
               default: 'users/{status}'
             },
+          },
+
+          substatus: {
+            doc: 'substatus',
+            name: {
+              format: String,
+              default: 'substatus'
+            },
+            path: {
+              format: String,
+              default: 'users/{substatus}'
+            }
           },
 
           timerLength: {

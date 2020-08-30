@@ -11,7 +11,10 @@
             tile
             x-large
             @click="optionClick(i)"
-        >{{ option.description | capitalize({ onlyFirstLetter: true }) }}</v-btn>
+        >
+          {{ option.heading | capitalize({ onlyFirstLetter: true }) }} <br/>
+          {{ option.subheading }}
+        </v-btn>
       </v-flex>
     </v-layout>
   </v-container>

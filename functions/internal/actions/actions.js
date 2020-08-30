@@ -1,23 +1,20 @@
-const shareable = module.parent.shareable
-const config = shareable.config
-const db = shareable.db
-
+const { config, db, utils } = module.parent.shareable
 const collectionsConfig = config.firestore.collections
 
-const usersCollConfig = config.firestore.collections.users
+const usersCollConfig = collectionsConfig.users
 const usersCollFields = usersCollConfig.fields
 const usersCollRef = db.collection(usersCollConfig.name)
 
-const worldCollConfig = config.firestore.collections.world
+const worldCollConfig = collectionsConfig.world
 const worldCollFields = worldCollConfig.fields
 const worldCollRef = db.collection(worldCollConfig.name)
 
 const worldStateDocRef = worldCollRef.doc(worldCollConfig.reserved.state)
-const queueCollConfig = config.firestore.collections.queue
+const queueCollConfig = collectionsConfig.queue
 const queueCollFields = queueCollConfig.fields
 const queueCollRef = worldStateDocRef.collection(queueCollConfig.name)
 
-const encountersCollConfig = config.firestore.collections.encounters
+const encountersCollConfig = collectionsConfig.encounters
 const encountersCollFields = encountersCollConfig.fields
 const encountersCollRef = worldStateDocRef.collection(encountersCollConfig.name)
 
@@ -40,6 +37,8 @@ routes.post('/to-fortress', toFortress)
 // fortress
 routes.post('/to-village', toVillage)
 routes.post('/seek-encounter', seekEncounter)
+routes.post('/visit-trading-post', visitTradingPost)
+routes.post('/leave-trading-post', leaveTradingPost)
 
 module.exports = routes
 
@@ -73,7 +72,7 @@ async function verifyOptionMiddleware(req, res, next) {
   }
 
   const user = req.playerUser
-  const availableOptions = getOptions(user)
+  const availableOptions = utils.getOptions(user)
   const isChosenOptionValid = availableOptions.options
       .map(o => o.apiPath)
       .includes(chosenOption)
@@ -123,21 +122,19 @@ async function timerWrapperMiddleware(req, res, next) {
 /////////////////////////////////////////////////////////////////////
 
 async function markManualRead(req) {
-  await usersCollRef
-      .doc(req.playerUser.id)
-      .update({ [usersCollFields.status.name]: 'deciding' })
+  return await updateStatus(req.playerUser.id, 'deciding')
+}
+
+async function visitTradingPost(req) {
+  return await updateSubstatus(req.playerUser.id, 'trading')
+}
+
+async function leaveTradingPost(req) {
+  return await updateSubstatus(req.playerUser.id, 'idle')
 }
 
 async function generateOptions(req) {
-  const user = req.playerUser
-  const options = getOptions(user)
-  await usersCollRef
-      .doc(user.id)
-      .update({
-        [usersCollFields.status.name]: 'deciding',
-        [usersCollFields.options.name]: options.options,
-        [usersCollFields.optionsTitle.name]: options.optionsTitle
-      })
+  return await updateStatus(req.playerUser.id, 'deciding')
 }
 
 async function toFortress(req) {
@@ -228,29 +225,6 @@ function getTimerData(timerLength) {
   }
 }
 
-function getOptions(user) {
-
-  let optionsTitle = ''
-  const options = []
-  const addOption = (apiPath, description) => {
-    options.push({ apiPath, description })
-  }
-
-  switch (user.location) {
-    case 'the village':
-      optionsTitle = `you are ${user.health < user.maxHealth ? "resting" : "waiting"} in the village`
-      addOption('to-fortress', 'head to the fortress')
-      break;
-
-    case 'fortress oblivion':
-      addOption('seek-encounter', 'seek encounter')
-      addOption('to-village', 'back to the village')
-      break;
-  }
-
-  return { options, optionsTitle}
-}
-
 function chooseRandomEncounterFormat() {
   return `${getRandomSubstring('VWR', 1)}-${getRandomSubstring('G1BEHFC2KUALN')}`
 }
@@ -265,4 +239,16 @@ function getRandomSubstring(str, minChars) {
     }
   } while(chars.length < minChars)
   return chars.join('')
+}
+
+async function updateStatus(id, status) {
+  return await updateUserFields(id, { [usersCollFields.status.name]: status })
+}
+
+async function updateSubstatus(id, substatus) {
+  return await updateUserFields(id, { [usersCollFields.substatus.name]: substatus })
+}
+
+async function updateUserFields(id, fieldMap) {
+  return await usersCollRef.doc(id).update(fieldMap)
 }

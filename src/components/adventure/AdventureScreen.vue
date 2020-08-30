@@ -62,18 +62,6 @@
       needUsername: false
     }),
 
-    watch: {
-      player: {
-        handler(newVal, oldVal) {
-          if (oldVal && oldVal.status !== this.STATUS.DECIDING
-              && newVal.status === this.STATUS.DECIDING) {
-            this.$functions('actions/generate-options')
-          }
-        },
-        deep: true
-      }
-    },
-
     created() {
       const userId = this.$firebase.auth().currentUser.uid
       this.$firebase.firestore().collection('users').doc(userId).onSnapshot(doc => {

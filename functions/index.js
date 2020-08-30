@@ -45,3 +45,5 @@ apiRouter.use('/', require('./api/api'))
 apiApp.use(utils.tryCatchAsync)
 apiApp.use(apiRouter) // must be after others
 exports.api = functions.https.onRequest(apiApp)
+
+exports.firestoreReactive = require('./firestore/firestore-reactive')
