@@ -50,6 +50,7 @@ routes.post('/climb-stairs', climbStairs)
 routes.post('/drink-potion', drinkPotion)
 routes.post('/search-treasure', searchTreasure)
 routes.post('/embrace-death', embraceDeath)
+routes.post('/hire-convoy', hireConvoy)
 
 module.exports = routes
 
@@ -75,9 +76,9 @@ async function userWrapperMiddleware(req, res, next) {
 }
 
 // requires req.playerUser
+// adds req.chosenOption
 async function verifyOptionMiddleware(req, res, next) {
   const chosenOption = req.path.substr(1)
-  req.chosenOption = chosenOption
   if ([
       'generate-options',
       'read-manual',
@@ -101,6 +102,7 @@ async function verifyOptionMiddleware(req, res, next) {
       .includes(chosenOption)
 
   if (isChosenOptionValid) {
+    req.chosenOption = user.options.find(o => o.apiPath === chosenOption)
     next()
   } else {
     const message = 'invalid option attempted'
@@ -161,8 +163,8 @@ async function generateOptions(req) {
 }
 
 async function standGround(req) {
-  const { id, chest, health, options } = req.playerUser
-  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  const { id, chest, health } = req.playerUser
+  const optionValue = req.chosenOption.value
   return await updateUserFields(id, {
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: health - optionValue,
@@ -171,29 +173,26 @@ async function standGround(req) {
 }
 
 async function retreatDownstairs(req) {
-  const { id, health, level, options } = req.playerUser
-  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  const { id, health, level } = req.playerUser
   return await updateUserFields(id, {
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.health.name]: health - optionValue,
+    [usersCollFields.health.name]: health - req.chosenOption.value,
     [usersCollFields.level.name]: level - 1
   })
 }
 
 async function claimKey(req) {
-  const { id, chest, options} = req.playerUser
-  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  const { id, chest } = req.playerUser
   return await updateUserFields(id, {
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: true,
-    [usersCollFields.chest.name]: chest + Math.round(optionValue / 4)
+    [usersCollFields.chest.name]: chest + Math.round(req.chosenOption.value / 4)
   })
 }
 
 async function siphonPotion(req) {
-  const { id, options } = req.playerUser
-  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
-  return await updateUserFields(id, {
+  const optionValue = req.chosenOption.value
+  return await updateUserFields(req.playerUser.id, {
     ...getTimerData(optionValue),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.potion.name]: optionValue
@@ -237,6 +236,15 @@ async function embraceDeath(req) {
     [usersCollFields.health.name]: 0,
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.potion.name]: 0,
+  })
+}
+
+async function hireConvoy(req) {
+  const { id, gold } = req.playerUser
+  return await updateUserFields(id, {
+    ...getTimerData(10),
+    [usersCollFields.location.name]: 'the village',
+    [usersCollFields.gold.name]: gold - req.chosenOption.value
   })
 }
 

@@ -168,7 +168,10 @@ exports.getOptions = (user, encounter) => {
             // addOption('rest', 'take a rest', 'very slow healing')
           }
 
-          if (user.level === 1) {
+          if (user.level === 1 && !user.hasKey && !user.potion) {
+            if (user.gold >= 15) {
+              addOption('hire-convoy', 'hire convoy bot', 'faster trip to the village', 15)
+            }
             addOption('to-village', 'back to the village')
           }
           break
