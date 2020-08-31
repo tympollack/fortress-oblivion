@@ -146,6 +146,8 @@ exports.getOptions = (user, encounter) => {
           optionsTitle = 'you are inside Fortress Oblivion'
           if (user.hasKey) {
             addOption('climb-stairs', 'climb the stairs', `use your key to go upstairs`)
+          } else if (user.chest) {
+            addOption('search-treasure', 'search for treasure')
           }
 
           addOption('seek-encounter', 'seek an encounter', 'find something to fight')

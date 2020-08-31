@@ -48,6 +48,7 @@ routes.post('/claim-key', claimKey)
 routes.post('/siphon-potion', siphonPotion)
 routes.post('/climb-stairs', climbStairs)
 routes.post('/drink-potion', drinkPotion)
+routes.post('/search-treasure', searchTreasure)
 
 module.exports = routes
 
@@ -212,6 +213,15 @@ async function climbStairs(req) {
   return await updateUserFields(id, {
     ...getTimerData(15),
     [usersCollFields.level.name]: level + 1
+  })
+}
+
+async function searchTreasure(req) {
+  const { id, chest, gold } = req.playerUser
+  return await updateUserFields(id, {
+    ...getTimerData(5),
+    [usersCollFields.chest.name]: 0,
+    [usersCollFields.gold.name]: gold + chest
   })
 }
 
