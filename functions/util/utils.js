@@ -92,45 +92,67 @@ exports.validateFirebaseIdToken = async (req, res, next) => {
   }
 }
 
-exports.getOptions = user => {
+exports.getOptions = (user, encounter) => {
 
   let optionsTitle = ''
   const options = []
-  const addOption = (apiPath, heading, subheading = '') => {
-    options.push({ apiPath, heading, subheading })
+  const addOption = (apiPath, heading, subheading = '', value = 0) => {
+    options.push({ apiPath, heading, subheading, value })
   }
 
-  //todo compiling these for later
-  // the fight has ended in your defeat. you must now select your fate.
-  // addOption('stand-ground', 'stand your ground', 'take a ## damage hit')
-  // addOption('retreat-downstairs', 'retreat downstairs', 'suffer only ## damage')
   switch (user.location) {
     case 'the village':
       optionsTitle = `you are ${user.health < user.maxHealth ? "resting" : "waiting"} in the village`
       addOption('to-fortress', 'head to the fortress')
-      break;
+      break
 
     case 'fortress oblivion':
-      if (user.substatus === 'trading') {
-        optionsTitle = 'welcome to the Trading Post'
-        addOption('leave-trading-post', 'leave', 'i\'m done here')
-      } else {
-        optionsTitle = 'you are inside Fortress Oblivion'
-        addOption('seek-encounter', 'seek an encounter', 'find something to fight')
+      switch (user.substatus) {
+        case 'trading':
+          optionsTitle = 'welcome to the Trading Post'
+          addOption('leave-trading-post', 'leave', 'i\'m done here')
+          break
 
-        if (user.gold && user.level % 3 === 0) {
-          addOption('visit-trading-post', 'visit the trading post', 'purchase equipment')
-        }
+        case 'post-encounter':
+          const userWon = encounter.winner === user.id
+          const message = `${userWon ? 'winning' : 'losing'} by ${encounter.result}`
+          optionsTitle = userWon ? 'you are victorious!' : 'you have been defeated!'
+          addOption('confirm-result', `confirm ${message}`)
+          addOption('dispute-result', `dispute ${message}`)
+          break
 
-        if (user.health < user.maxHealth) {
-          // addOption('rest', 'take a rest', 'very slow healing')
-        }
+        case 'post-win':
 
-        if (user.level === '1') {
-          addOption('to-village', 'back to the village')
-        }
+          break
+
+        case 'post-loss':
+          const fullHpLoss = Math.min(encounter.result, user.health)
+          const partialHpLoss = Math.min(Math.ceil(encounter.result / 3), user.health)
+          optionsTitle = 'the fight has ended in your defeat. you must now select your fate.'
+          addOption('stand-ground', 'stand your ground', `take ${(fullHpLoss + '')[0] === '8' ? 'an': 'a'} ${fullHpLoss} damage hit`, fullHpLoss)
+          if (!isNaN(user.level) && Number.parseInt(user.level) > 1) {
+            addOption('retreat-downstairs', 'retreat downstairs', `suffer only ${partialHpLoss} damage`, partialHpLoss)
+          }
+          break
+
+        default:
+          optionsTitle = 'you are inside Fortress Oblivion'
+          addOption('seek-encounter', 'seek an encounter', 'find something to fight')
+
+          if (user.gold && user.level % 3 === 0) {
+            addOption('visit-trading-post', 'visit the trading post', 'purchase equipment')
+          }
+
+          if (user.health < user.maxHealth) {
+            // addOption('rest', 'take a rest', 'very slow healing')
+          }
+
+          if (user.level === '1') {
+            addOption('to-village', 'back to the village')
+          }
+          break
       }
-      break;
+      break
   }
 
   return { options, optionsTitle}

@@ -571,6 +571,18 @@ module.exports = {
             }
           },
 
+          resultDisputed: {
+            doc: 'result disputed by opponent',
+            name: {
+              format: String,
+              default: 'resultDisputed'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{resultDisputed}'
+            }
+          },
+
           start: {
             doc: 'start time',
             name: {

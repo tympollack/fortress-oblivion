@@ -28,8 +28,11 @@ routes.use(versionHistoryMiddleware)
 routes.use(timerWrapperMiddleware)
 
 // general
-routes.post('/read-manual', markManualRead)
 routes.post('/generate-options', generateOptions)
+routes.post('/read-manual', markManualRead)
+routes.post('/report-result', reportResult)
+routes.post('/confirm-result', confirmResult)
+routes.post('/dispute-result', disputeResult)
 
 // village
 routes.post('/to-fortress', toFortress)
@@ -39,6 +42,8 @@ routes.post('/to-village', toVillage)
 routes.post('/seek-encounter', seekEncounter)
 routes.post('/visit-trading-post', visitTradingPost)
 routes.post('/leave-trading-post', leaveTradingPost)
+routes.post('/stand-ground', standGround)
+routes.post('/retreat-downstairs', retreatDownstairs)
 
 module.exports = routes
 
@@ -66,13 +71,25 @@ async function userWrapperMiddleware(req, res, next) {
 // requires req.playerUser
 async function verifyOptionMiddleware(req, res, next) {
   const chosenOption = req.path.substr(1)
-  if (['generate-options', 'read-manual'].includes(chosenOption)) {
+  req.chosenOption = chosenOption
+  if ([
+      'generate-options',
+      'read-manual',
+      'report-result',
+      ].includes(chosenOption)) {
     next()
     return
   }
 
   const user = req.playerUser
-  const availableOptions = utils.getOptions(user)
+
+  let encounter = {}
+  if (user.encounterId) {
+    const encounterDoc = await encountersCollRef.doc(user.encounterId).get()
+    encounter = encounterDoc.data()
+  }
+
+  const availableOptions = utils.getOptions(user, encounter)
   const isChosenOptionValid = availableOptions.options
       .map(o => o.apiPath)
       .includes(chosenOption)
@@ -137,6 +154,26 @@ async function generateOptions(req) {
   return await updateStatus(req.playerUser.id, 'deciding')
 }
 
+async function standGround(req) {
+  const { id, health, options } = req.playerUser
+  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  console.log(id, optionValue, options)
+  return await updateUserFields(id, {
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.health.name]: health - optionValue
+  })
+}
+
+async function retreatDownstairs(req) {
+  const { id, health, level, options } = req.playerUser
+  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  return await updateUserFields(id, {
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.health.name]: health - optionValue,
+    [usersCollFields.level.name]: Number.parseInt(level) - 1
+  })
+}
+
 async function toFortress(req) {
   console.log(this.$timestamp)
   await usersCollRef
@@ -178,14 +215,13 @@ async function seekEncounter(req) {
 
       const user = await userDocRef.get()
       const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
-      console.log(gameId)
       promises.push(encountersCollRef.doc(gameId).set({
         [encountersCollFields.format.name]: chooseRandomEncounterFormat(),
         [encountersCollFields.player1.name]: user.data(),
         [encountersCollFields.player1Id.name]: userId,
         [encountersCollFields.player2.name]: queuedUser.data(),
         [encountersCollFields.player2Id.name]: queuedUserId,
-        [encountersCollFields.playPace.name]: '48 hour',
+        [encountersCollFields.playPace.name]: '48-hour',
         [encountersCollFields.start.name]: time,
       }))
 
@@ -208,7 +244,70 @@ async function seekEncounter(req) {
   await Promise.all(promises)
 }
 
+async function reportResult(req, res) {
+  const result = req.body.data.result
+  const playerWon = result > 0
+  const { encounterId, id } = req.playerUser
+  const opponentId = encounterId.split('_').slice(1).find(s => s !== id)
+
+  const encounterDocRef = encountersCollRef.doc(encounterId)
+  const encounterDoc = await encounterDocRef.get()
+
+  const encounter = encounterDoc.data()
+  const encounterResult = encounter.result
+  const promises = []
+  promises.push(updateUserFields(id, {
+    [usersCollFields.status.name]: 'deciding',
+    [usersCollFields.substatus.name]: playerWon ? 'post-win' : 'post-loss'
+  }))
+  if (encounterResult) {
+    const message = 'results already entered for encounter'
+    console.error(message, encounterId)
+    res.status(400).send(message)
+  } else {
+    promises.push(updateUserFields(opponentId, {
+      [usersCollFields.status.name]: 'deciding',
+      [usersCollFields.substatus.name]: 'post-encounter'
+    }))
+    await encounterDocRef.update({
+      [encountersCollFields.end.name]: Date.now(),
+      [encountersCollFields.result.name]: Math.abs(result),
+      [encountersCollFields.winner.name]: playerWon ? id : opponentId,
+      [encountersCollFields.loser.name]: playerWon ? opponentId : id,
+    })
+  }
+
+  await Promise.all(promises)
+}
+
+async function confirmResult(req) {
+  await actOnEncounterResult(req.playerUser, true)
+}
+
+async function disputeResult(req) {
+  await actOnEncounterResult(req.playerUser, false)
+}
+
 /////////////////////////////////////////////////////////////////////
+
+async function actOnEncounterResult(player, isConfirmed) {
+  const { id, encounterId } = player
+  const encounterDocRef = encountersCollRef.doc(encounterId)
+  const encounterDoc = await encounterDocRef.get()
+  const encounter = encounterDoc.data()
+
+  const fieldToUpdate = isConfirmed ? encountersCollFields.resultConfirmed : encountersCollFields.resultDisputed
+  const promises = []
+  promises.push(updateUserFields(player.id, {
+    [usersCollFields.status.name]: 'deciding',
+    [usersCollFields.substatus.name]: encounter.winner === id ? 'post-win' : 'post-loss'
+  }))
+  promises.push(encountersCollRef.doc(encounterId).update({
+    [fieldToUpdate.name]: true,
+  }))
+
+  await Promise.all(promises)
+}
 
 function getUserById(id) {
   return new Promise(async resolve => {
