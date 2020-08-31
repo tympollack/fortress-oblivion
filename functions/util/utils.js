@@ -136,9 +136,13 @@ exports.getOptions = (user, encounter) => {
           const fullHpLoss = Math.min(encounter.result, user.health)
           const partialHpLoss = Math.min(Math.ceil(encounter.result / 3), user.health)
           optionsTitle = 'the fight has ended in your defeat. you must now select your fate.'
-          addOption('stand-ground', 'stand your ground', `take ${(fullHpLoss + '')[0] === '8' ? 'an': 'a'} ${fullHpLoss} damage hit`, fullHpLoss)
-          if (user.level > 1) {
-            addOption('retreat-downstairs', 'retreat downstairs', `suffer only ${partialHpLoss} damage`, partialHpLoss)
+          if (user.health > fullHpLoss) {
+            addOption('stand-ground', 'stand your ground', `take ${(fullHpLoss + '')[0] === '8' ? 'an': 'a'} ${fullHpLoss} damage hit`, fullHpLoss)
+          } else {
+            addOption('embrace-death', 'enjoy a swift death', 'embrace the darkness')
+          }
+          if (user.level > 1 && user.health > partialHpLoss) {
+              addOption('retreat-downstairs', 'retreat downstairs', `suffer only ${partialHpLoss} damage`, partialHpLoss)
           }
           break
 

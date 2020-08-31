@@ -49,6 +49,7 @@ routes.post('/siphon-potion', siphonPotion)
 routes.post('/climb-stairs', climbStairs)
 routes.post('/drink-potion', drinkPotion)
 routes.post('/search-treasure', searchTreasure)
+routes.post('/embrace-death', embraceDeath)
 
 module.exports = routes
 
@@ -222,6 +223,20 @@ async function searchTreasure(req) {
     ...getTimerData(5),
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: gold + chest
+  })
+}
+
+async function embraceDeath(req) {
+  const { id, level } = req.playerUser
+  return await updateUserFields(id, {
+    ...getTimerData((10 * level + 200)),
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.chest.name]: 0,
+    [usersCollFields.gold.name]: 0,
+    [usersCollFields.hasKey.name]: false,
+    [usersCollFields.health.name]: 0,
+    [usersCollFields.location.name]: 'the village',
+    [usersCollFields.potion.name]: 0,
   })
 }
 
