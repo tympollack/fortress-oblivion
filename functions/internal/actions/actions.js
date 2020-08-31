@@ -212,6 +212,7 @@ async function climbStairs(req) {
   const { id, level } = req.playerUser
   return await updateUserFields(id, {
     ...getTimerData(15),
+    [usersCollFields.hasKey.name]: false,
     [usersCollFields.level.name]: level + 1
   })
 }
