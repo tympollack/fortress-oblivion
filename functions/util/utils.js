@@ -122,7 +122,14 @@ exports.getOptions = (user, encounter) => {
           break
 
         case 'post-win':
-
+          const potionAmount = Math.floor(encounter.result / 2)
+          optionsTitle = 'the fight has ended, and you have emerged victorious! choose your reward.'
+          if (!user.hasKey) {
+            addOption('claim-key', 'claim a key', `a key to floor ${user.level + 1}!`, encounter.result)
+          }
+          if (!user.potion) {
+            addOption('siphon-potion', 'siphon a potion', `a potion for ${potionAmount} health!`, potionAmount)
+          }
           break
 
         case 'post-loss':
@@ -130,13 +137,17 @@ exports.getOptions = (user, encounter) => {
           const partialHpLoss = Math.min(Math.ceil(encounter.result / 3), user.health)
           optionsTitle = 'the fight has ended in your defeat. you must now select your fate.'
           addOption('stand-ground', 'stand your ground', `take ${(fullHpLoss + '')[0] === '8' ? 'an': 'a'} ${fullHpLoss} damage hit`, fullHpLoss)
-          if (!isNaN(user.level) && Number.parseInt(user.level) > 1) {
+          if (user.level > 1) {
             addOption('retreat-downstairs', 'retreat downstairs', `suffer only ${partialHpLoss} damage`, partialHpLoss)
           }
           break
 
         default:
           optionsTitle = 'you are inside Fortress Oblivion'
+          if (user.hasKey) {
+            addOption('climb-stairs', 'climb the stairs', `use your key to go upstairs`)
+          }
+
           addOption('seek-encounter', 'seek an encounter', 'find something to fight')
 
           if (user.gold && user.level % 3 === 0) {
@@ -144,10 +155,14 @@ exports.getOptions = (user, encounter) => {
           }
 
           if (user.health < user.maxHealth) {
+            if (user.potion) {
+              const healAmount = Math.min(user.maxHealth - user.health, user.potion)
+              addOption('drink-potion', 'drink your potion', `drink to heal ${healAmount} health`)
+            }
             // addOption('rest', 'take a rest', 'very slow healing')
           }
 
-          if (user.level === '1') {
+          if (user.level === 1) {
             addOption('to-village', 'back to the village')
           }
           break

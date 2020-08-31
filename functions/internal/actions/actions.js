@@ -44,6 +44,10 @@ routes.post('/visit-trading-post', visitTradingPost)
 routes.post('/leave-trading-post', leaveTradingPost)
 routes.post('/stand-ground', standGround)
 routes.post('/retreat-downstairs', retreatDownstairs)
+routes.post('/claim-key', claimKey)
+routes.post('/siphon-potion', siphonPotion)
+routes.post('/climb-stairs', climbStairs)
+routes.post('/drink-potion', drinkPotion)
 
 module.exports = routes
 
@@ -155,12 +159,12 @@ async function generateOptions(req) {
 }
 
 async function standGround(req) {
-  const { id, health, options } = req.playerUser
+  const { id, chest, health, options } = req.playerUser
   const optionValue = options.find(o => o.apiPath === req.chosenOption).value
-  console.log(id, optionValue, options)
   return await updateUserFields(id, {
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.health.name]: health - optionValue
+    [usersCollFields.health.name]: health - optionValue,
+    [usersCollFields.chest.name]: chest + Math.round(optionValue / 5)
   })
 }
 
@@ -170,7 +174,44 @@ async function retreatDownstairs(req) {
   return await updateUserFields(id, {
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: health - optionValue,
-    [usersCollFields.level.name]: Number.parseInt(level) - 1
+    [usersCollFields.level.name]: level - 1
+  })
+}
+
+async function claimKey(req) {
+  const { id, chest, options} = req.playerUser
+  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  return await updateUserFields(id, {
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.hasKey.name]: true,
+    [usersCollFields.chest.name]: chest + Math.round(optionValue / 4)
+  })
+}
+
+async function siphonPotion(req) {
+  const { id, options } = req.playerUser
+  const optionValue = options.find(o => o.apiPath === req.chosenOption).value
+  return await updateUserFields(id, {
+    ...getTimerData(optionValue),
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.potion.name]: optionValue
+  })
+}
+
+async function drinkPotion(req) {
+  const { id, health, maxHealth, potion } = req.playerUser
+  const healAmount = Math.min(maxHealth - health, potion)
+  return await updateUserFields(id, {
+    ...getTimerData(healAmount),
+    [usersCollFields.potion.name]: potion - healAmount
+  })
+}
+
+async function climbStairs(req) {
+  const { id, level } = req.playerUser
+  return await updateUserFields(id, {
+    ...getTimerData(15),
+    [usersCollFields.level.name]: level + 1
   })
 }
 
@@ -179,7 +220,7 @@ async function toFortress(req) {
   await usersCollRef
       .doc(req.playerUser.id)
       .update({
-        ...getTimerData(15),
+        ...getTimerData(10),
         [usersCollFields.location.name]: 'fortress oblivion'
       })
 }
@@ -188,7 +229,7 @@ async function toVillage(req) {
   await usersCollRef
       .doc(req.playerUser.id)
       .update({
-        ...getTimerData(15),
+        ...getTimerData(210),
         [usersCollFields.location.name]: 'the village'
       })
 }

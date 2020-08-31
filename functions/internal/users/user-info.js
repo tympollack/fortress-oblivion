@@ -83,7 +83,7 @@ async function addUser(req, res) {
     id,
     hasKey: false,
     health: 100,
-    level: '1',
+    level: 1,
     location: 'the village',
     maxHealth: 100,
     potion: 0,
