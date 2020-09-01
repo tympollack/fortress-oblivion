@@ -106,9 +106,9 @@ exports.getOptions = (user, encounter) => {
       optionsTitle = `you are ${isPlayerHurt ? "resting" : "waiting"} in the village`
       addOption('to-fortress', 'head to the fortress')
 
-      // if (isPlayerHurt) {
-      //   addOption('high-lyle', 'hire High Priest Lyle', 'faster healing for gold')
-      // }
+      if (isPlayerHurt) {
+        addOption('hire-lyle', 'hire High Priest Lyle', 'faster healing for gold')
+      }
       break
 
     case 'fortress oblivion':

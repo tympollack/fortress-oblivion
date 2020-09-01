@@ -36,6 +36,7 @@ routes.post('/dispute-result', disputeResult)
 
 // village
 routes.post('/to-fortress', toFortress)
+routes.post('/hire-lyle', hireLyle)
 
 // fortress
 routes.post('/to-village', toVillage)
@@ -249,19 +250,25 @@ async function hireConvoy(req) {
   })
 }
 
+async function hireLyle(req) {
+  const { id, gold, health, maxHealth, timerEnd } = req.playerUser
+  const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
+  const currentHealth = Math.max(health + passiveHeal, maxHealth)
+  const activeHeal = Math.min(maxHealth - currentHealth, gold)
+  return await updateUserFields(id, {
+    ...getTimerData(0),
+    [usersCollFields.gold.name]: gold - activeHeal,
+    [usersCollFields.health.name]: health + activeHeal
+  })
+}
+
 async function toFortress(req) {
-  const { id, health, location, timerEnd } = req.playerUser
-
-  // healing in village
-  let gainedHealth = 0
-  if (location === 'the village') {
-    gainedHealth = Math.floor((Date.now() - timerEnd) / 10000)
-  }
-
+  const { id, health, maxHealth, timerEnd } = req.playerUser
+  const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
   return await updateUserFields(id, {
     ...getTimerData(10),
     [usersCollFields.location.name]: 'fortress oblivion',
-    [usersCollFields.health.name]: health + gainedHealth
+    [usersCollFields.health.name]: Math.max(health + passiveHeal, maxHealth)
   })
 }
 
@@ -399,12 +406,15 @@ function getUserById(id) {
 
 function getTimerData(timerLength) {
   const now = Date.now()
-  return {
-    [usersCollFields.status.name]: 'timing',
+  const ret = {
     [usersCollFields.timerEnd.name]: now + timerLength * 1000,
     [usersCollFields.timerLength.name]: timerLength,
     [usersCollFields.timerStart.name]: now
   }
+  if (timerLength) {
+    ret[usersCollFields.status.name] = 'timing'
+  }
+  return ret
 }
 
 function chooseRandomEncounterFormat() {

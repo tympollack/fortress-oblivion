@@ -43,7 +43,7 @@
         if (this.player.location.toLowerCase() === 'the village') {
           gainedHealth = Math.floor((Date.now() - this.player.timerEnd) / 10000)
         }
-        return this.player.health + gainedHealth
+        return Math.min(this.player.health + gainedHealth, this.player.maxHealth)
       },
 
       isPlayerInFortress() {
