@@ -24,8 +24,7 @@
     methods: {
       computeTimeRemaining() {
         const now = Date.now()
-        const timeSince = Math.floor((now - this.player.timerStart) / 1000);
-        this.timeRemaining = Math.max(this.player.timerLength - timeSince, 0)
+        this.timeRemaining = Math.max(this.player.timerEnd - now, 0)
         this.timeRemaining
             ? setTimeout(() => this.computeTimeRemaining(), 1000)
             : this.callServer('timer action complete at ' + now)

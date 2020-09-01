@@ -102,8 +102,13 @@ exports.getOptions = (user, encounter) => {
 
   switch (user.location) {
     case 'the village':
-      optionsTitle = `you are ${user.health < user.maxHealth ? "resting" : "waiting"} in the village`
+      const isPlayerHurt = user.health < user.maxHealth
+      optionsTitle = `you are ${isPlayerHurt ? "resting" : "waiting"} in the village`
       addOption('to-fortress', 'head to the fortress')
+
+      // if (isPlayerHurt) {
+      //   addOption('high-lyle', 'hire High Priest Lyle', 'faster healing for gold')
+      // }
       break
 
     case 'fortress oblivion':

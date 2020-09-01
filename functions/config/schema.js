@@ -335,6 +335,18 @@ module.exports = {
             }
           },
 
+          timerEnd: {
+            doc: 'time for timed action end',
+            name: {
+              format: String,
+              default: 'timerEnd'
+            },
+            path: {
+              format: String,
+              default: 'users/{timerEnd}'
+            }
+          },
+
           timerLength: {
             doc: 'amount of time in seconds for timer',
             name: {

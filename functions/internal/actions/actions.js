@@ -250,13 +250,19 @@ async function hireConvoy(req) {
 }
 
 async function toFortress(req) {
-  console.log(this.$timestamp)
-  await usersCollRef
-      .doc(req.playerUser.id)
-      .update({
-        ...getTimerData(10),
-        [usersCollFields.location.name]: 'fortress oblivion'
-      })
+  const { id, health, location, timerEnd } = req.playerUser
+
+  // healing in village
+  let gainedHealth = 0
+  if (location === 'the village') {
+    gainedHealth = Math.floor((Date.now() - timerEnd) / 10000)
+  }
+
+  return await updateUserFields(id, {
+    ...getTimerData(10),
+    [usersCollFields.location.name]: 'fortress oblivion',
+    [usersCollFields.health.name]: health + gainedHealth
+  })
 }
 
 async function toVillage(req) {
@@ -392,10 +398,12 @@ function getUserById(id) {
 }
 
 function getTimerData(timerLength) {
+  const now = Date.now()
   return {
     [usersCollFields.status.name]: 'timing',
+    [usersCollFields.timerEnd.name]: now + timerLength * 1000,
     [usersCollFields.timerLength.name]: timerLength,
-    [usersCollFields.timerStart.name]: Date.now()
+    [usersCollFields.timerStart.name]: now
   }
 }
 

@@ -3,10 +3,10 @@
     <v-layout row>
       <v-flex xs12>
         <h3>{{ player.username }}</h3>
-        {{ player.health }} / {{ player.maxHealth }} HP
+        {{ currentHealth }} / {{ player.maxHealth }} HP
         | {{ player.gold }} gold
-        <span v-if="player.hasKey">| +key</span>
-        <span v-if="player.potion">| {{ player.potion }} HP potion</span>
+        <span v-if="player.hasKey">| +key </span>
+        <span v-if="player.potion">| {{ player.potion }} HP potion </span>
       </v-flex>
 
       <v-flex xs12>
@@ -14,7 +14,7 @@
         <span v-if="isPlayerInFortress">{{ player.level | ordinal({ includeNumber: true }) }} Floor</span>
       </v-flex>
 
-      <v-flex v-if="player.equipment" xs12>
+      <v-flex v-if="(player.equipment || []).length" xs12>
         <h4>Equipment</h4>
         <div v-for="equipment in player.equipment" :key="equipment.type">
           {{ equipment.quantity | pluralize(equipment.type, { includeNumber: true }) | capitalize }}
@@ -37,6 +37,15 @@
     },
 
     computed: {
+      currentHealth() {
+        // healing in village
+        let gainedHealth = 0
+        if (this.player.location.toLowerCase() === 'the village') {
+          gainedHealth = Math.floor((Date.now() - this.player.timerEnd) / 10000)
+        }
+        return this.player.health + gainedHealth
+      },
+
       isPlayerInFortress() {
         return this.player.location.toLowerCase() === 'fortress oblivion'
       }
