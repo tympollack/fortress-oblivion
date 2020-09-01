@@ -162,7 +162,7 @@ exports.getOptions = (user, encounter) => {
           break
 
         default:
-          optionsTitle = 'you are inside Fortress Oblivion'
+          optionsTitle = `you are ${user.substatus.indexOf('resting') === 0 ? 'resting' : ''} inside Fortress Oblivion`
           if (user.hasKey) {
             addOption('climb-stairs', 'climb the stairs', `use your key to go upstairs`)
           }
@@ -182,7 +182,7 @@ exports.getOptions = (user, encounter) => {
               const healAmount = Math.min(user.maxHealth - user.health, user.potion)
               addOption('drink-potion', 'drink your potion', `drink to heal ${healAmount} health`)
             }
-            // addOption('rest', 'take a rest', 'very slow healing')
+            addOption('take-rest', 'take a rest', 'very slow healing')
           }
 
           if (user.level === 1 && !user.hasKey && !user.potion) {
@@ -197,4 +197,21 @@ exports.getOptions = (user, encounter) => {
   }
 
   return { options, optionsTitle}
+}
+
+exports.hasEquipment = (equipment, type) => {
+  return equipment.findIndex(e => e.type === type) > -1
+}
+
+exports.subtractEquipment = (equipment, type, quantity = 1) => {
+  const equipmentIndex = equipment.findIndex(e => e.type === type)
+  if (equipmentIndex > -1) {
+    const newEquipment = equipment.concat()
+    if (equipment[equipmentIndex].quantity === 1) {
+      newEquipment.splice(equipmentIndex, 1)
+    } else {
+      newEquipment[equipmentIndex].quantity--
+    }
+    return newEquipment
+  }
 }

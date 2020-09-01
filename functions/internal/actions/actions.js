@@ -55,6 +55,7 @@ routes.post('/hire-convoy', hireConvoy)
 routes.post('/buy-plasma-bots', buyEquipment)
 routes.post('/buy-repair-bots', buyEquipment)
 routes.post('/buy-defense-bots', buyEquipment)
+routes.post('/takeRest', takeRest)
 
 module.exports = routes
 
@@ -198,18 +199,9 @@ async function siphonPotion(req) {
   const { id, equipment } = req.playerUser
   let optionValue = req.chosenOption.value
   const fieldMap = {}
-  if (equipment.length) {
-    const equipmentIndex = equipment.findIndex(e => e.type === 'plasma bot')
-    if (equipmentIndex > -1) {
-      const newEquipment = equipment.concat()
-      if (equipment[equipmentIndex].quantity === 1) {
-        newEquipment.splice(equipmentIndex, 1)
-      } else {
-        newEquipment[equipmentIndex].quantity--
-      }
-      fieldMap[usersCollFields.equipment.name] = newEquipment
-      optionValue /= 3
-    }
+  if (utils.hasEquipment(equipment, 'plasma bot')) {
+    fieldMap[usersCollFields.equipment.name] = utils.subtractEquipment(equipment, 'plasma bot')
+    optionValue /= 3
   }
 
   return await updateUserFields(id, {
@@ -276,6 +268,24 @@ async function hireConvoy(req) {
     ...getTimerData(10),
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.gold.name]: gold - req.chosenOption.value
+  })
+}
+
+async function takeRest(req) {
+  const { id, health, level, maxHealth, equipment } = req.playerUser
+  const equipmentType = 'repair bot'
+  const fieldMap = {}
+  let timeVal = 80 + 2 * level
+  if (utils.hasEquipment(equipment, equipmentType)) {
+    [usersCollFields.equipment.name] = utils.subtractEquipment(equipment, equipmentType)
+    timeVal -= 15
+  }
+
+  return await updateUserFields(id, {
+    ...fieldMap,
+    ...getTimerData(timeVal * 2),
+    [usersCollFields.substatus.name]: 'resting repair bot',
+    [usersCollFields.health.name]: Math.min(health + 2, maxHealth)
   })
 }
 

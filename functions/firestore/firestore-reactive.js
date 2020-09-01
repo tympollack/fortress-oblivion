@@ -24,5 +24,15 @@ exports.onUserUpdated = firestore
         encounter = encounterDoc.data()
       }
 
+      if (before.substatus.indexOf('resting') === 0) {
+        let restingRate = 80 + 2 * before.level
+        if (before.substatus.indexOf('repair bot') > -1) {
+          restingRate -= 15
+        }
+        const timeSince = (Date.now() - before.timerEnd) / 1000
+        const gainedHealth = Math.round(timeSince / restingRate)
+        after.health = Math.min(after.health + gainedHealth, after.maxHealth)
+      }
+
       await usersCollRef.doc(before.id).update(utils.getOptions(after, encounter))
     })
