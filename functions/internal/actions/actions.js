@@ -52,6 +52,9 @@ routes.post('/drink-potion', drinkPotion)
 routes.post('/search-treasure', searchTreasure)
 routes.post('/embrace-death', embraceDeath)
 routes.post('/hire-convoy', hireConvoy)
+routes.post('/buy-plasma-bots', buyEquipment)
+routes.post('/buy-repair-bots', buyEquipment)
+routes.post('/buy-defense-bots', buyEquipment)
 
 module.exports = routes
 
@@ -192,8 +195,25 @@ async function claimKey(req) {
 }
 
 async function siphonPotion(req) {
-  const optionValue = req.chosenOption.value
-  return await updateUserFields(req.playerUser.id, {
+  const { id, equipment } = req.playerUser
+  let optionValue = req.chosenOption.value
+  const fieldMap = {}
+  if (equipment.length) {
+    const equipmentIndex = equipment.findIndex(e => e.type === 'plasma bot')
+    if (equipmentIndex > -1) {
+      const newEquipment = equipment.concat()
+      if (equipment[equipmentIndex].quantity === 1) {
+        newEquipment.splice(equipmentIndex, 1)
+      } else {
+        newEquipment[equipmentIndex].quantity--
+      }
+      fieldMap[usersCollFields.equipment.name] = newEquipment
+      optionValue /= 3
+    }
+  }
+
+  return await updateUserFields(id, {
+    ...fieldMap,
     ...getTimerData(optionValue),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.potion.name]: optionValue
@@ -224,6 +244,15 @@ async function searchTreasure(req) {
     ...getTimerData(5),
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: gold + chest
+  })
+}
+
+async function buyEquipment(req) {
+  const { id, equipment, gold } = req.playerUser
+  const { price, quantity, type } =  req.chosenOption.value
+  return await updateUserFields(id, {
+    [usersCollFields.gold.name]: gold  - price,
+    [usersCollFields.equipment.name]: equipment.concat({ quantity, type })
   })
 }
 

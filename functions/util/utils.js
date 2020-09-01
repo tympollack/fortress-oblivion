@@ -115,6 +115,15 @@ exports.getOptions = (user, encounter) => {
       switch (user.substatus) {
         case 'trading':
           optionsTitle = 'welcome to the Trading Post'
+          if (user.gold >= 25) {
+            addOption('buy-plasma-bots', '5 plasma bots', '25g - reduce siphon potion time', { type: 'plasma bot', quantity: 5, price: 25 })
+            addOption('buy-repair-bots', '5 repair bots', '25g - reduced rest rate', { type: 'repair bot', quantity: 5, price: 25 })
+          }
+
+          if (user.gold >= 40) {
+            addOption('buy-defense-bots', '5 defense bots', '40g - reduce max hit point reduction', { type: 'defense bot', quantity: 5, price: 40 })
+          }
+
           addOption('leave-trading-post', 'leave', 'i\'m done here')
           break
 
