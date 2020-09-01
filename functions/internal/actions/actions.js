@@ -168,20 +168,33 @@ async function generateOptions(req) {
 }
 
 async function standGround(req) {
-  const { id, chest, health } = req.playerUser
+  const { id, chest, equipment, health, maxHealth } = req.playerUser
   const optionValue = req.chosenOption.value
+  const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
+  const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
+  const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
+  if (utils.hasEquipment(equipment, 'defense bot')) {
+    fieldMap[usersCollFields.equipment.name] = utils.subtractEquipment(equipment, 'defense bot')
+  }
   return await updateUserFields(id, {
+    ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.health.name]: health - optionValue,
+    [usersCollFields.health.name]: Math.min(health - optionValue, newMaxHp),
+    [usersCollFields.maxHealth.name]: newMaxHp,
     [usersCollFields.chest.name]: chest + Math.round(optionValue / 5)
   })
 }
 
 async function retreatDownstairs(req) {
-  const { id, health, level } = req.playerUser
+  const { id, equipment, health, level, maxHealth } = req.playerUser
+  const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
+  const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
+  const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
   return await updateUserFields(id, {
+    ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.health.name]: health - req.chosenOption.value,
+    [usersCollFields.health.name]: Math.min(health - req.chosenOption.value, newMaxHp),
+    [usersCollFields.maxHealth.name]: newMaxHp,
     [usersCollFields.level.name]: level - 1
   })
 }
