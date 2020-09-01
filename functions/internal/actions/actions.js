@@ -283,7 +283,7 @@ async function hireLyle(req) {
   const { id, gold, health, maxHealth, timerEnd } = req.playerUser
   const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
   const currentHealth = Math.max(health + passiveHeal, maxHealth)
-  const activeHeal = Math.min(maxHealth - currentHealth, gold)
+  const activeHeal = Math.min(maxHealth - currentHealth, req.chosenOption.value)
   return await updateUserFields(id, {
     ...getTimerData(0),
     [usersCollFields.gold.name]: gold - activeHeal,

@@ -102,12 +102,13 @@ exports.getOptions = (user, encounter) => {
 
   switch (user.location) {
     case 'the village':
-      const isPlayerHurt = user.health < user.maxHealth
-      optionsTitle = `you are ${isPlayerHurt ? "resting" : "waiting"} in the village`
+      const damageTaken = user.maxHealth - user.health
+      optionsTitle = `you are ${damageTaken ? "resting" : "waiting"} in the village`
       addOption('to-fortress', 'head to the fortress')
 
-      if (isPlayerHurt) {
-        addOption('hire-lyle', 'hire High Priest Lyle', 'faster healing for gold')
+      if (damageTaken) {
+        const lyleHealAmount = Math.ceil(Math.min(damageTaken, user.gold, 19) * .8)
+        addOption('hire-lyle', 'hire High Priest Lyle', `${lyleHealAmount}g - faster healing for gold`, lyleHealAmount)
       }
       break
 
