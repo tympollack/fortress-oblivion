@@ -36,9 +36,17 @@
       }
     },
 
+    data: () => ({
+      gainedHealth: 0
+    }),
+
+    created() {
+      this.computeGainedHealth()
+    },
+
     computed: {
       currentHealth() {
-        return Math.min(this.player.health + this.computeGainedHealth(), this.player.maxHealth)
+        return Math.min(this.player.health + this.gainedHealth, this.player.maxHealth)
       },
 
       isPlayerInFortress() {
@@ -56,17 +64,19 @@
         // passive healing in village
         const location = this.player.location.toLowerCase()
         if (location === 'the village') {
-          return computeGainedHealthOverTime(10)
+          this.gainedHealth = computeGainedHealthOverTime(10)
+          return
         }
 
         // passive healing resting in fortress
         const substatus = this.player.substatus.toLowerCase()
         if (location === 'fortress oblivion' && substatus.indexOf('resting') === 0) {
           const baseTime = substatus.indexOf('repair bot') > -1 ? 65 : 80
-          return Math.min(computeGainedHealthOverTime(baseTime + 2 * this.player.level), 6)
+          this.gainedHealth = Math.min(computeGainedHealthOverTime(baseTime + 2 * this.player.level), 6)
+          return
         }
 
-        return 0
+        this.gainedHealth = 0
       },
     }
   }

@@ -173,13 +173,14 @@ async function standGround(req) {
   const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
   const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
   const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
+  const newHp = Math.min(Math.max(health - optionValue, 0), newMaxHp)
   if (utils.hasEquipment(equipment, 'defense bot')) {
     fieldMap[usersCollFields.equipment.name] = utils.subtractEquipment(equipment, 'defense bot')
   }
   return await updateUserFields(id, {
     ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.health.name]: Math.min(health - optionValue, newMaxHp),
+    [usersCollFields.health.name]: newHp,
     [usersCollFields.maxHealth.name]: newMaxHp,
     [usersCollFields.chest.name]: chest + Math.round(optionValue / 5)
   })
