@@ -36,42 +36,37 @@
       }
     },
 
-    data: () => ({
-      currentHealth: null
-    }),
-
-    created() {
-      this.computeCurrentHealth()
-    },
-
     computed: {
+      currentHealth() {
+        return Math.min(this.player.health + this.computeGainedHealth(), this.player.maxHealth)
+      },
+
       isPlayerInFortress() {
         return this.player.location.toLowerCase() === 'fortress oblivion'
       }
     },
 
     methods: {
-      computeCurrentHealth() {
+      computeGainedHealth() {
         const computeGainedHealthOverTime = timeAmount => {
-          setTimeout(() => this.computeCurrentHealth(), 60000)
+          setTimeout(() => this.computeGainedHealth(), 60000)
           return Math.max(Math.floor((Date.now() - this.player.timerEnd) / (timeAmount * 1000)), 0)
         }
 
-        let gainedHealth = 0
+        // passive healing in village
         const location = this.player.location.toLowerCase()
-        const substatus = this.player.substatus.toLowerCase()
-
         if (location === 'the village') {
-          // passive healing in village
-          gainedHealth = computeGainedHealthOverTime(10)
-        } else if (location === 'fortress oblivion') {
-          if (substatus.indexOf('resting') === 0) {
-            const isUsingRepairBot = substatus.indexOf('repair bot') > -1
-            gainedHealth = Math.min(computeGainedHealthOverTime((isUsingRepairBot ? 65 : 80) + 2 * this.player.level), 6)
-          }
+          return computeGainedHealthOverTime(10)
         }
 
-        this.currentHealth = Math.min(this.player.health + gainedHealth, this.player.maxHealth)
+        // passive healing resting in fortress
+        const substatus = this.player.substatus.toLowerCase()
+        if (location === 'fortress oblivion' && substatus.indexOf('resting') === 0) {
+          const baseTime = substatus.indexOf('repair bot') > -1 ? 65 : 80
+          return Math.min(computeGainedHealthOverTime(baseTime + 2 * this.player.level), 6)
+        }
+
+        return 0
       },
     }
   }
