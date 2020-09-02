@@ -21,12 +21,6 @@ exports.onUserUpdated = firestore
         return
       }
 
-      let encounter = {}
-      if (after.encounterId) {
-        const encounterDoc = await encountersCollRef.doc(after.encounterId).get()
-        encounter = encounterDoc.data()
-      }
-
       if (before.substatus.indexOf('resting') === 0) {
         const restingRate = (before.substatus.indexOf('repair bot') > -1 ? 65 : 80) + 2 * before.level
         const timeSince = (Date.now() - before.timerEnd) / 1000
@@ -35,7 +29,7 @@ exports.onUserUpdated = firestore
       }
 
       await usersCollRef.doc(before.id).update({
-        ...utils.getOptions(after, encounter),
+        ...utils.getOptions(after),
         [usersCollFields.health.name]: after.health
       })
     })

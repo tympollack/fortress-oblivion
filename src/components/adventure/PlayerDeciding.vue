@@ -49,7 +49,7 @@
         } catch(e) {
           console.error(e)
         }
-        setTimeout(() => this.loading = false, 1500)
+        setTimeout(() => this.loading = false, 5000)
       }
     }
   }

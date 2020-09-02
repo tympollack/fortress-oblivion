@@ -146,6 +146,18 @@ module.exports = {
             }
           },
 
+          encounterResult: {
+            doc: 'current encounter result',
+            name: {
+              format: String,
+              default: 'encounterResult'
+            },
+            path: {
+              format: String,
+              default: 'users/{encounterResult}'
+            }
+          },
+
           gold: {
             doc: 'gold amount',
             name: {

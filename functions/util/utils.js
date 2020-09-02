@@ -92,13 +92,16 @@ exports.validateFirebaseIdToken = async (req, res, next) => {
   }
 }
 
-exports.getOptions = (user, encounter) => {
+exports.getOptions = user => {
 
   let optionsTitle = ''
   const options = []
   const addOption = (apiPath, heading, subheading = '', value = 0) => {
     options.push({ apiPath, heading, subheading, value })
   }
+
+  const userWon = user.encounterResult > 0
+  const encounterResult = Math.abs(user.encounterResult)
 
   switch (user.location) {
     case 'the village':
@@ -129,18 +132,17 @@ exports.getOptions = (user, encounter) => {
           break
 
         case 'post-encounter':
-          const userWon = encounter.winner === user.id
-          const message = `${userWon ? 'winning' : 'losing'} by ${encounter.result}`
+          const message = `${userWon ? 'winning' : 'losing'} by ${encounterResult}`
           optionsTitle = userWon ? 'you are victorious!' : 'you have been defeated!'
           addOption('confirm-result', `confirm ${message}`)
           addOption('dispute-result', `dispute ${message}`)
           break
 
         case 'post-win':
-          const potionAmount = Math.floor(encounter.result / 2)
+          const potionAmount = Math.floor(encounterResult / 2)
           optionsTitle = 'the fight has ended, and you have emerged victorious! choose your reward.'
           if (!user.hasKey) {
-            addOption('claim-key', 'claim a key', `a key to floor ${user.level + 1}!`, encounter.result)
+            addOption('claim-key', 'claim a key', `a key to floor ${user.level + 1}!`, encounterResult)
           }
           if (!user.potion) {
             addOption('siphon-potion', 'siphon a potion', `a potion for ${potionAmount} health!`, potionAmount)
@@ -148,8 +150,8 @@ exports.getOptions = (user, encounter) => {
           break
 
         case 'post-loss':
-          const fullHpLoss = Math.min(encounter.result, user.health)
-          const partialHpLoss = Math.min(Math.ceil(encounter.result / 3), user.health)
+          const fullHpLoss = Math.min(encounterResult, user.health)
+          const partialHpLoss = Math.min(Math.ceil(encounterResult / 3), user.health)
           optionsTitle = 'the fight has ended in your defeat. you must now select your fate.'
           if (user.health > fullHpLoss) {
             addOption('stand-ground', 'stand your ground', `take ${(fullHpLoss + '')[0] === '8' ? 'an': 'a'} ${fullHpLoss} damage hit`, fullHpLoss)

@@ -343,7 +343,16 @@ async function toVillage(req) {
 }
 
 async function seekEncounter(req) {
-  let queuedUserId
+  const user = req.playerUser
+  const userId = req.playerUser.id
+  const userDocRef = usersCollRef.doc(userId)
+  const time = Date.now()
+  await userDocRef.update({
+    [usersCollFields.queuedSince.name]: time,
+    [usersCollFields.status.name]: 'queueing'
+  })
+
+  let queuedUserId = null
   const queuedUsers = await queueCollRef.get()
   queuedUsers.forEach(doc => {
     if (doc.exists) {
@@ -351,42 +360,36 @@ async function seekEncounter(req) {
     }
   })
 
-  const time = Date.now()
   const promises = []
-  const user = req.playerUser
-  const userId = req.playerUser.id
-  const userDocRef = usersCollRef.doc(userId)
-  if (queuedUserId) {
-    const queuedUserDocRef = usersCollRef.doc(queuedUserId)
-    const queuedUser = await queuedUserDocRef.get()
-    if (queuedUser.data().status === 'queueing') {
-      promises.push(queueCollRef.doc(queuedUserId).delete())
+  if (!queuedUserId) {
+    await queueCollRef.doc(userId).set(user)
+    return
+  }
 
-      const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
-      promises.push(encountersCollRef.doc(gameId).set({
-        [encountersCollFields.format.name]: chooseRandomEncounterFormat(),
-        [encountersCollFields.player1.name]: user,
-        [encountersCollFields.player1Id.name]: userId,
-        [encountersCollFields.player2.name]: queuedUser.data(),
-        [encountersCollFields.player2Id.name]: queuedUserId,
-        [encountersCollFields.playPace.name]: '48-hour',
-        [encountersCollFields.start.name]: time,
-      }))
+  // todo this should eventually be matchmaking service
+  const queuedUserDocRef = usersCollRef.doc(queuedUserId)
+  const queuedUser = await queuedUserDocRef.get()
+  if (queuedUser.data().status === 'queueing') {
+    promises.push(queueCollRef.doc(queuedUserId).delete())
 
-      const fightingUpdateObj = {
-        [usersCollFields.encounterId.name]: gameId,
-        [usersCollFields.fightingSince.name]: time,
-        [usersCollFields.status.name]: 'fighting'
-      }
-      promises.push(userDocRef.update(fightingUpdateObj))
-      promises.push(queuedUserDocRef.update(fightingUpdateObj))
-    }
-  } else {
-    promises.push(queueCollRef.doc(userId).set(user))
-    promises.push(userDocRef.update({
-      [usersCollFields.queuedSince.name]: time,
-      [usersCollFields.status.name]: 'queueing'
+    const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
+    promises.push(encountersCollRef.doc(gameId).set({
+      [encountersCollFields.format.name]: chooseRandomEncounterFormat(),
+      [encountersCollFields.player1.name]: user,
+      [encountersCollFields.player1Id.name]: userId,
+      [encountersCollFields.player2.name]: queuedUser.data(),
+      [encountersCollFields.player2Id.name]: queuedUserId,
+      [encountersCollFields.playPace.name]: '48-hour',
+      [encountersCollFields.start.name]: time,
     }))
+
+    const fightingUpdateObj = {
+      [usersCollFields.encounterId.name]: gameId,
+      [usersCollFields.fightingSince.name]: time,
+      [usersCollFields.status.name]: 'fighting',
+    }
+    promises.push(userDocRef.update(fightingUpdateObj))
+    promises.push(queuedUserDocRef.update(fightingUpdateObj))
   }
 
   await Promise.all(promises)
@@ -402,30 +405,30 @@ async function reportResult(req, res) {
   const encounterDoc = await encounterDocRef.get()
 
   const encounter = encounterDoc.data()
-  const encounterResult = encounter.result
-  const promises = []
-  promises.push(updateUserFields(id, {
+  await updateUserFields(id, {
     [usersCollFields.status.name]: 'deciding',
-    [usersCollFields.substatus.name]: playerWon ? 'post-win' : 'post-loss'
-  }))
-  if (encounterResult) {
+    [usersCollFields.substatus.name]: playerWon ? 'post-win' : 'post-loss',
+    [usersCollFields.encounterResult.name]: result
+  })
+
+  if (encounter.result) {
     const message = 'results already entered for encounter'
     console.error(message, encounterId)
     res.status(400).send(message)
-  } else {
-    promises.push(updateUserFields(opponentId, {
-      [usersCollFields.status.name]: 'deciding',
-      [usersCollFields.substatus.name]: 'post-encounter'
-    }))
-    await encounterDocRef.update({
-      [encountersCollFields.end.name]: Date.now(),
-      [encountersCollFields.result.name]: Math.abs(result),
-      [encountersCollFields.winner.name]: playerWon ? id : opponentId,
-      [encountersCollFields.loser.name]: playerWon ? opponentId : id,
-    })
+    return
   }
 
-  await Promise.all(promises)
+  await encounterDocRef.update({
+    [encountersCollFields.end.name]: Date.now(),
+    [encountersCollFields.result.name]: Math.abs(result),
+    [encountersCollFields.winner.name]: playerWon ? id : opponentId,
+    [encountersCollFields.loser.name]: playerWon ? opponentId : id,
+  })
+  await updateUserFields(opponentId, {
+    [usersCollFields.status.name]: 'deciding',
+    [usersCollFields.substatus.name]: 'post-encounter',
+    [usersCollFields.encounterResult.name]: result * -1
+  })
 }
 
 async function confirmResult(req) {
@@ -439,22 +442,15 @@ async function disputeResult(req) {
 /////////////////////////////////////////////////////////////////////
 
 async function actOnEncounterResult(player, isConfirmed) {
-  const { id, encounterId } = player
-  const encounterDocRef = encountersCollRef.doc(encounterId)
-  const encounterDoc = await encounterDocRef.get()
-  const encounter = encounterDoc.data()
-
+  const { id, encounterId, encounterResult } = player
   const fieldToUpdate = isConfirmed ? encountersCollFields.resultConfirmed : encountersCollFields.resultDisputed
-  const promises = []
-  promises.push(updateUserFields(player.id, {
+  await updateUserFields(id, {
     [usersCollFields.status.name]: 'deciding',
-    [usersCollFields.substatus.name]: encounter.winner === id ? 'post-win' : 'post-loss'
-  }))
-  promises.push(encountersCollRef.doc(encounterId).update({
+    [usersCollFields.substatus.name]: encounterResult > 0 ? 'post-win' : 'post-loss'
+  })
+  await encountersCollRef.doc(encounterId).update({
     [fieldToUpdate.name]: true,
-  }))
-
-  await Promise.all(promises)
+  })
 }
 
 function getUserById(id) {
