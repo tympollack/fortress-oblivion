@@ -45,7 +45,11 @@
       </v-flex>
 
       <v-flex xs6>
-        <a @click="signupEmail">Sign me up!</a>
+        <v-btn
+            dark
+            :loading="loading"
+            @click="signupEmail"
+        >Sign me up!</v-btn>
       </v-flex>
     </v-layout>
   </div>
@@ -56,6 +60,7 @@
     name: 'FormSignup',
 
     data: () => ({
+      loading: false,
       valid: true,
       email: null,
       password: null,
@@ -88,8 +93,9 @@
         this.validateForm()
         if (!this.valid) return
 
+        this.loading = true
         try {
-          await this.$firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
+          await this.$firebase.auth().createUserWithEmailAndPassword(this.email.trim(), this.password)
           await this.$firebase.auth().currentUser.sendEmailVerification()
           this.errorMessage = 'Check your email for account verification.'
           this.resetForm()
@@ -97,6 +103,7 @@
           console.error(e.message)
           this.errorMessage = e.message
         }
+        this.loading = false
       }
     }
   }

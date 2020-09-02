@@ -2,10 +2,16 @@
   <div v-if="!player">
     <UsernamePrompt v-if="needUsername"></UsernamePrompt>
   </div>
+
   <div v-else-if="player.status === STATUS.ABOUT">
     <AboutScreen></AboutScreen>
-    <v-btn @click="markManualRead">Got it</v-btn>
+    <v-btn
+        dark
+        :loading="loading"
+        @click="markManualRead"
+    >Got it</v-btn>
   </div>
+
   <div v-else>
     <PlayerInfo :player="player"></PlayerInfo>
 
@@ -59,7 +65,8 @@
         TIMING: 'timing',
       },
       player: null,
-      needUsername: false
+      needUsername: false,
+      loading: false
     }),
 
     created() {
@@ -74,8 +81,14 @@
     },
 
     methods: {
-      markManualRead() {
-        this.$functions('actions/read-manual')
+      async markManualRead() {
+        this.loading = true
+        try {
+          await this.$functions('actions/read-manual')
+        } catch(e) {
+          console.error(e)
+        }
+        this.loading = false
       }
     }
   }

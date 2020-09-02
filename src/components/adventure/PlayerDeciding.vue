@@ -5,8 +5,12 @@
         <h4>{{ player.optionsTitle | capitalize({ onlyFirstLetter: true }) }}</h4>
       </v-flex>
 
-      <v-flex xs12 v-for="(option, i) in player.options">
+      <v-flex
+          xs12
+          v-if="!loading"
+          v-for="(option, i) in player.options">
         <v-btn
+            dark
             block
             tile
             x-large
@@ -31,9 +35,19 @@
       }
     },
 
+    data: () => ({
+      loading: false
+    }),
+
     methods: {
-      optionClick(optionIndex) {
-        this.$functions(`actions/${this.player.options[optionIndex].apiPath}`)
+      async optionClick(optionIndex) {
+        this.loading = true
+        try {
+          await this.$functions(`actions/${this.player.options[optionIndex].apiPath}`)
+        } catch(e) {
+          console.error(e)
+        }
+        this.loading = false
       }
     }
   }

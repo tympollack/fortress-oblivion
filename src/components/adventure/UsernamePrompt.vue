@@ -13,7 +13,11 @@
     </v-flex>
 
     <v-flex xs6>
-      <v-btn @click="createUser()">Submit</v-btn>
+      <v-btn
+          dark
+          :loading="loading"
+          @click="createUser()"
+      >Submit</v-btn>
     </v-flex>
   </v-layout>
 </template>
@@ -24,18 +28,26 @@
 
     data: () => ({
       errorMessage: null,
-      username: null
+      username: null,
+      loading: false
     }),
 
     methods: {
       async createUser() {
-        const userExistenceResponse = await this.$firebase.functions().httpsCallable(`api/users/exists/${this.username}`)()
-        if (userExistenceResponse.data) {
-          this.errorMessage = 'Username taken.'
-          return
-        }
+        this.loading = true
+        try {
+          const userExistenceResponse = await this.$firebase.functions().httpsCallable(`api/users/exists/${this.username}`)()
+          if (userExistenceResponse.data) {
+            this.errorMessage = 'Username taken.'
+            this.loading = false
+            return
+          }
 
-        await this.$functions('users/', { username: this.username })
+          await this.$functions('users/', { username: this.username })
+        } catch (e) {
+          console.error(e)
+        }
+        this.loading = false
       }
     }
   }

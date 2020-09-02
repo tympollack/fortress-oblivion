@@ -106,7 +106,7 @@ exports.getOptions = (user, encounter) => {
       optionsTitle = `you are ${damageTaken ? "resting" : "waiting"} in the village`
       addOption('to-fortress', 'head to the fortress')
 
-      if (damageTaken) {
+      if (damageTaken && user.gold) {
         const lyleHealAmount = Math.ceil(Math.min(damageTaken, user.gold, 19) * .8)
         addOption('hire-lyle', 'hire High Priest Lyle', `${lyleHealAmount}g - faster healing for gold`, lyleHealAmount)
       }

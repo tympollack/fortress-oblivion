@@ -25,7 +25,7 @@ routes.use(userWrapperMiddleware)
 routes.use(verifyOptionMiddleware)
 routes.use(verifyTimerMiddleware)
 routes.use(versionHistoryMiddleware)
-routes.use(timerWrapperMiddleware)
+routes.use(performanceWrapperMiddleware)
 
 // general
 routes.post('/generate-options', generateOptions)
@@ -55,7 +55,7 @@ routes.post('/hire-convoy', hireConvoy)
 routes.post('/buy-plasma-bots', buyEquipment)
 routes.post('/buy-repair-bots', buyEquipment)
 routes.post('/buy-defense-bots', buyEquipment)
-routes.post('/takeRest', takeRest)
+routes.post('/take-rest', takeRest)
 
 module.exports = routes
 
@@ -143,7 +143,7 @@ async function versionHistoryMiddleware(req, res, next) {
 }
 
 // should be last called
-async function timerWrapperMiddleware(req, res, next) {
+async function performanceWrapperMiddleware(req, res, next) {
   const start = Date.now();
   await next()
   console.log(req.path, 'finished in', Date.now() - start, 'ms')
@@ -210,16 +210,17 @@ async function claimKey(req) {
 
 async function siphonPotion(req) {
   const { id, equipment } = req.playerUser
-  let optionValue = req.chosenOption.value
+  const optionValue = req.chosenOption.value
+  let timerValue = optionValue
   const fieldMap = {}
   if (utils.hasEquipment(equipment, 'plasma bot')) {
     fieldMap[usersCollFields.equipment.name] = utils.subtractEquipment(equipment, 'plasma bot')
-    optionValue /= 3
+    timerValue /= 3
   }
 
   return await updateUserFields(id, {
     ...fieldMap,
-    ...getTimerData(optionValue),
+    ...getTimerData(timerValue),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.potion.name]: optionValue
   })
@@ -230,6 +231,8 @@ async function drinkPotion(req) {
   const healAmount = Math.min(maxHealth - health, potion)
   return await updateUserFields(id, {
     ...getTimerData(healAmount),
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.health.name]: health + healAmount,
     [usersCollFields.potion.name]: potion - healAmount
   })
 }
@@ -238,6 +241,7 @@ async function climbStairs(req) {
   const { id, level } = req.playerUser
   return await updateUserFields(id, {
     ...getTimerData(15),
+    [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.level.name]: level + 1
   })
@@ -247,6 +251,7 @@ async function searchTreasure(req) {
   const { id, chest, gold } = req.playerUser
   return await updateUserFields(id, {
     ...getTimerData(5),
+    [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: gold + chest
   })
@@ -270,6 +275,7 @@ async function embraceDeath(req) {
     [usersCollFields.gold.name]: 0,
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.health.name]: 0,
+    [usersCollFields.maxHealth.name]: 100,
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.potion.name]: 0,
   })
@@ -279,17 +285,20 @@ async function hireConvoy(req) {
   const { id, gold } = req.playerUser
   return await updateUserFields(id, {
     ...getTimerData(10),
+    [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.location.name]: 'the village',
-    [usersCollFields.gold.name]: gold - req.chosenOption.value
+    [usersCollFields.gold.name]: gold - req.chosenOption.value,
+    [usersCollFields.maxHealth.name]: 100
   })
 }
 
 async function takeRest(req) {
   const { id, health, level, maxHealth, equipment } = req.playerUser
   const equipmentType = 'repair bot'
+  const hasEquipment = utils.hasEquipment(equipment, equipmentType)
   const fieldMap = {}
   let timeVal = 80 + 2 * level
-  if (utils.hasEquipment(equipment, equipmentType)) {
+  if (hasEquipment) {
     [usersCollFields.equipment.name] = utils.subtractEquipment(equipment, equipmentType)
     timeVal -= 15
   }
@@ -297,7 +306,7 @@ async function takeRest(req) {
   return await updateUserFields(id, {
     ...fieldMap,
     ...getTimerData(timeVal * 2),
-    [usersCollFields.substatus.name]: 'resting repair bot',
+    [usersCollFields.substatus.name]: hasEquipment ? 'resting repair bot' : 'resting',
     [usersCollFields.health.name]: Math.min(health + 2, maxHealth)
   })
 }
@@ -329,7 +338,9 @@ async function toVillage(req) {
       .doc(req.playerUser.id)
       .update({
         ...getTimerData(210),
-        [usersCollFields.location.name]: 'the village'
+        [usersCollFields.substatus.name]: 'idle',
+        [usersCollFields.location.name]: 'the village',
+        [usersCollFields.maxHealth.name]: 100
       })
 }
 

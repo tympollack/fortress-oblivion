@@ -35,7 +35,11 @@
       </v-flex>
 
       <v-flex xs6>
-        <a @click="loginEmail">Login</a>
+        <v-btn
+            dark
+            :loading="loading"
+            @click="loginEmail"
+        >Login</v-btn>
       </v-flex>
     </v-layout>
   </div>
@@ -54,7 +58,8 @@
         required: v => !!v || 'Required',
         email: v => /.+@.+\..+/.test(v) || 'E-mail must be in valid format',
       },
-      valid: true
+      valid: true,
+      loading: false
     }),
 
     methods: {
@@ -66,8 +71,9 @@
         this.validateForm()
         if (!this.valid) return
 
+        this.loading = true
         try {
-          await this.$firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+          await this.$firebase.auth().signInWithEmailAndPassword(this.email.trim(), this.password)
           const user = this.$firebase.auth().currentUser
           if (user && !user.emailVerified) {
             this.errorMessage = 'This email address has not yet been verified.'
@@ -77,6 +83,7 @@
           this.errorMessage = e.message
           this.password = null
         }
+        this.loading = false
       },
     }
   }

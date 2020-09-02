@@ -25,14 +25,14 @@ exports.onUserUpdated = firestore
       }
 
       if (before.substatus.indexOf('resting') === 0) {
-        let restingRate = 80 + 2 * before.level
-        if (before.substatus.indexOf('repair bot') > -1) {
-          restingRate -= 15
-        }
+        const restingRate = (before.substatus.indexOf('repair bot') > -1 ? 65 : 80) + 2 * before.level
         const timeSince = (Date.now() - before.timerEnd) / 1000
-        const gainedHealth = Math.round(timeSince / restingRate)
+        const gainedHealth = Math.min(Math.round(timeSince / restingRate), 6)
         after.health = Math.min(after.health + gainedHealth, after.maxHealth)
       }
 
-      await usersCollRef.doc(before.id).update(utils.getOptions(after, encounter))
+      await usersCollRef.doc(before.id).update({
+        ...utils.getOptions(after, encounter),
+        [usersCollFields.health.name]: after.health
+      })
     })

@@ -76,8 +76,10 @@ async function addUser(req, res) {
     return
   }
 
+  const now = Date.now()
   const player = {
     chest: 0,
+    created: now,
     equipment: [],
     gold: 0,
     id,
@@ -88,8 +90,10 @@ async function addUser(req, res) {
     maxHealth: 100,
     potion: 0,
     status: 'about',
+    substatus: 'idle',
+    timerEnd: now,
     timerLength: 0,
-    timerStart: null,
+    timerStart: now,
     username
   }
 

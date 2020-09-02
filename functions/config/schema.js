@@ -76,6 +76,18 @@ module.exports = {
             }
           },
 
+          created: {
+            doc: 'time user created',
+            name: {
+              format: String,
+              default: 'created'
+            },
+            path: {
+              format: String,
+              default: 'users/{created}'
+            }
+          },
+
           equipment: {
             doc: 'array of player items held',
             name: {
