@@ -83,6 +83,8 @@ async function addUser(req, res) {
     equipment: [],
     gold: 0,
     id,
+    isAdmin: false,
+    isGod: false,
     hasKey: false,
     health: 100,
     level: 1,

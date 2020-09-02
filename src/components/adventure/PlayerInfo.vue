@@ -50,7 +50,7 @@
       },
 
       isPlayerInFortress() {
-        return this.player.location.toLowerCase() === 'fortress oblivion'
+        return (this.player.location || '').toLowerCase() === 'fortress oblivion'
       }
     },
 

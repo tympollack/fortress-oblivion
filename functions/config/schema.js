@@ -182,6 +182,30 @@ module.exports = {
             }
           },
 
+          isAdmin: {
+            doc: 'is user game admin',
+            name: {
+              format: String,
+              default: 'isAdmin'
+            },
+            path: {
+              format: String,
+              default: 'users/{isAdmin}'
+            }
+          },
+
+          isGod: {
+            doc: 'is user app admin',
+            name: {
+              format: String,
+              default: 'isGod'
+            },
+            path: {
+              format: String,
+              default: 'users/{isGod}'
+            }
+          },
+
           hasKey: {
             doc: 'whether key is in hand',
             name: {

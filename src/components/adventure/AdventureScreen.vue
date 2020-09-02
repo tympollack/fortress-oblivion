@@ -1,36 +1,38 @@
 <template>
-  <div v-if="!player">
-    <UsernamePrompt v-if="needUsername"></UsernamePrompt>
-  </div>
+  <div>
+    <div v-if="!player.id"></div>
 
-  <div v-else-if="player.status === STATUS.ABOUT">
-    <AboutScreen></AboutScreen>
-    <v-btn
-        dark
-        :loading="loading"
-        @click="markManualRead"
-    >Got it</v-btn>
-  </div>
+    <UsernamePrompt v-else-if="!player.username"></UsernamePrompt>
 
-  <div v-else>
-    <PlayerInfo :player="player"></PlayerInfo>
+    <div v-else-if="player.status === STATUS.ABOUT">
+      <AboutScreen></AboutScreen>
+      <v-btn
+          dark
+          :loading="loading"
+          @click="markManualRead"
+      >Got it</v-btn>
+    </div>
 
-    <PlayerDeciding
-        v-if="player.status === STATUS.DECIDING"
-        :player="player"
-    ></PlayerDeciding>
-    <PlayerFighting
-        v-else-if="player.status === STATUS.FIGHTING"
-        :player="player"
-    ></PlayerFighting>
-    <PlayerQueueing
-        v-else-if="player.status === STATUS.QUEUEING"
-        :player="player"
-    ></PlayerQueueing>
-    <PlayerTiming
-        v-else-if="player.status === STATUS.TIMING"
-        :player="player"
-    ></PlayerTiming>
+    <div v-else>
+      <PlayerInfo :player="player"></PlayerInfo>
+
+      <PlayerDeciding
+          v-if="player.status === STATUS.DECIDING"
+          :player="player"
+      ></PlayerDeciding>
+      <PlayerFighting
+          v-else-if="player.status === STATUS.FIGHTING"
+          :player="player"
+      ></PlayerFighting>
+      <PlayerQueueing
+          v-else-if="player.status === STATUS.QUEUEING"
+          :player="player"
+      ></PlayerQueueing>
+      <PlayerTiming
+          v-else-if="player.status === STATUS.TIMING"
+          :player="player"
+      ></PlayerTiming>
+    </div>
   </div>
 </template>
 
@@ -56,6 +58,13 @@
       UsernamePrompt
     },
 
+    props: {
+      player: {
+        type: Object,
+        required: true
+      },
+    },
+
     data: () => ({
       STATUS: {
         ABOUT: 'about',
@@ -64,21 +73,8 @@
         QUEUEING: 'queueing',
         TIMING: 'timing',
       },
-      player: null,
-      needUsername: false,
       loading: false
     }),
-
-    created() {
-      const userId = this.$firebase.auth().currentUser.uid
-      this.$firebase.firestore().collection('users').doc(userId).onSnapshot(doc => {
-        if (doc.exists) {
-          this.player = doc.data()
-        } else {
-          this.needUsername = true
-        }
-      })
-    },
 
     methods: {
       async markManualRead() {

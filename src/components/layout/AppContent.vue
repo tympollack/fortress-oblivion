@@ -1,19 +1,25 @@
 <template>
   <v-container class="wrapper ma-0 pa-0">
     <MenuBar
+        :show-admin="isAdmin"
         @about-click="screen = SCREEN.ABOUT"
+        @admin-click="screen = SCREEN.ADMIN"
     ></MenuBar>
 
     <v-container class="display-area">
   <!--  i know there's a better way to do this, but i forget right now, so this is temp solution  -->
-      <AboutScreen v-if="screen === SCREEN.ABOUT"></AboutScreen>
-      <AdventureScreen v-else-if="screen === SCREEN.ADVENTURE"></AdventureScreen>
-      <ChatScreen v-else-if="screen === SCREEN.CHAT"></ChatScreen>
-      <ChronicleScreen v-else-if="screen === SCREEN.CHRONICLE"></ChronicleScreen>
+      <AboutScreen v-if="screenName === SCREEN.ABOUT.name"></AboutScreen>
+      <AdminScreen v-else-if="screenName === SCREEN.ADMIN.name && isAdmin"></AdminScreen>
+      <AdventureScreen
+          v-else-if="screenName === SCREEN.ADVENTURE.name"
+          :player="player"
+      ></AdventureScreen>
+      <ChatScreen v-else-if="screenName === SCREEN.CHAT.name"></ChatScreen>
+      <ChronicleScreen v-else-if="screenName === SCREEN.CHRONICLE.name"></ChronicleScreen>
     </v-container>
 
     <BottomNav
-        :value="screen"
+        :value="screenNumber"
         @adventure-click="screen = SCREEN.ADVENTURE"
         @chat-click="screen = SCREEN.CHAT"
         @chronicle-click="screen = SCREEN.CHRONICLE"
@@ -28,27 +34,55 @@
   import AboutScreen from '../about/AboutScreen'
   import ChatScreen from '../chat/ChatScreen'
   import ChronicleScreen from '../chronicle/ChronicleScreen'
+  import AdminScreen from '../admin/AdminScreen'
 
   export default {
     name: 'AppContent',
 
     data: () => ({
       SCREEN: {
-        ABOUT: 0,
-        ADVENTURE: 1,
-        CHAT: 3,
-        CHRONICLE: 2,
+        ABOUT: { name: 'about', number: 0 },
+        ADMIN: { name: 'admin', number: 0 },
+        ADVENTURE: { name: 'adventure', number: 1 },
+        CHAT: { name: 'chat', number: 3 },
+        CHRONICLE: { name: 'chronicle', number: 2 },
       },
-      screen: 1,
+      screen: { name: 'adventure', number: 1 },
+      player: {}
     }),
 
     components: {
+      AdminScreen,
       AboutScreen,
       AdventureScreen,
       BottomNav,
       ChatScreen,
       ChronicleScreen,
       MenuBar
+    },
+
+    created() {
+      const id = this.$firebase.auth().currentUser.uid
+      this.$firebase.firestore()
+          .collection('users')
+          .doc(id)
+          .onSnapshot(doc => {
+        this.player = doc.exists ? doc.data() : { id }
+      })
+    },
+
+    computed: {
+      isAdmin() {
+        return this.player.isAdmin || this.player.isGod
+      },
+
+      screenName() {
+        return this.screen.name
+      },
+
+      screenNumber() {
+        return this.screen.number
+      },
     },
   }
 </script>

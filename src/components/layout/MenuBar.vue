@@ -14,6 +14,9 @@
       </template>
 
       <v-list>
+        <v-list-item v-if="showAdmin" @click="$emit('admin-click')">
+          <v-list-item-title>Admin</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="$emit('about-click')">
           <v-list-item-title>About</v-list-item-title>
         </v-list-item>
@@ -28,6 +31,13 @@
 <script>
   export default {
     name: 'MenuBar',
+
+    props: {
+      showAdmin: {
+        type: Boolean,
+        default: false
+      }
+    },
 
     methods: {
       logout: async function() {
