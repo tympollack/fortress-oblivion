@@ -7,6 +7,7 @@
 
     <v-flex xs12>
       <v-text-field
+          dark
           v-model="username"
           label="Star Realms IGN"
       ></v-text-field>
