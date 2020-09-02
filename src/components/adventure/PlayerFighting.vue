@@ -29,7 +29,11 @@
       </v-flex>
 
       <v-flex xs6>
-        <v-btn @click=reportResult()>Report Result</v-btn>
+        <v-btn
+            dark
+            :loading="loading"
+            @click=reportResult()
+        >Report Result</v-btn>
       </v-flex>
     </v-layout>
   </v-container>
@@ -48,7 +52,8 @@
 
     data: () => ({
       encounter: {},
-      result: null
+      result: null,
+      loading: false
     }),
 
     computed: {
@@ -67,8 +72,14 @@
     },
 
     methods: {
-      reportResult() {
-        this.$functions('actions/report-result', { result: this.result })
+      async reportResult() {
+        this.loading = true
+        try {
+          await this.$functions('actions/report-result', { result: this.result })
+        } catch(e) {
+          console.error(e)
+        }
+        this.loading = false
       },
     }
   }

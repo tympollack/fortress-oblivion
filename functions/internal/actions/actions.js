@@ -353,20 +353,19 @@ async function seekEncounter(req) {
 
   const time = Date.now()
   const promises = []
+  const user = req.playerUser
   const userId = req.playerUser.id
   const userDocRef = usersCollRef.doc(userId)
   if (queuedUserId) {
     const queuedUserDocRef = usersCollRef.doc(queuedUserId)
     const queuedUser = await queuedUserDocRef.get()
-    console.log(queuedUser.data())
     if (queuedUser.data().status === 'queueing') {
       promises.push(queueCollRef.doc(queuedUserId).delete())
 
-      const user = await userDocRef.get()
       const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
       promises.push(encountersCollRef.doc(gameId).set({
         [encountersCollFields.format.name]: chooseRandomEncounterFormat(),
-        [encountersCollFields.player1.name]: user.data(),
+        [encountersCollFields.player1.name]: user,
         [encountersCollFields.player1Id.name]: userId,
         [encountersCollFields.player2.name]: queuedUser.data(),
         [encountersCollFields.player2Id.name]: queuedUserId,
@@ -383,7 +382,7 @@ async function seekEncounter(req) {
       promises.push(queuedUserDocRef.update(fightingUpdateObj))
     }
   } else {
-    promises.push(queueCollRef.doc(userId).set({ id: userId }))
+    promises.push(queueCollRef.doc(userId).set(user))
     promises.push(userDocRef.update({
       [usersCollFields.queuedSince.name]: time,
       [usersCollFields.status.name]: 'queueing'
