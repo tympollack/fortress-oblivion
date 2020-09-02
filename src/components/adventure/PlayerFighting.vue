@@ -22,6 +22,7 @@
 
       <v-flex xs12>
         <v-text-field
+            dark
             v-model="result"
             label="Authority difference"
         ></v-text-field>

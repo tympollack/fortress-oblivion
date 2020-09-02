@@ -167,7 +167,9 @@ exports.getOptions = (user, encounter) => {
             addOption('climb-stairs', 'climb the stairs', `use your key to go upstairs`)
           }
 
-          addOption('seek-encounter', 'seek an encounter', 'find something to fight')
+          if (!user.hasKey || !user.potion ) {
+            addOption('seek-encounter', 'seek an encounter', 'find something to fight')
+          }
 
           if (!user.hasKey && user.chest) {
             addOption('search-treasure', 'search for treasure')
