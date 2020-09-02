@@ -64,6 +64,18 @@ module.exports = {
         },
 
         fields: {
+          action: {
+            doc: 'action taken',
+            name: {
+              format: String,
+              default: 'action'
+            },
+            path: {
+              format: String,
+              default: 'users/{action}'
+            }
+          },
+
           chest: {
             doc: 'gold to be discovered',
             name: {

@@ -24,7 +24,7 @@ const routes = require('express').Router()
 routes.use(userWrapperMiddleware)
 routes.use(verifyOptionMiddleware)
 routes.use(verifyTimerMiddleware)
-routes.use(versionHistoryMiddleware)
+routes.use(passiveHealingMiddleware)
 routes.use(performanceWrapperMiddleware)
 
 // general
@@ -94,6 +94,7 @@ async function verifyOptionMiddleware(req, res, next) {
   }
 
   const user = req.playerUser
+  user.action = chosenOption
 
   let encounter = {}
   if (user.encounterId) {
@@ -128,17 +129,14 @@ async function verifyTimerMiddleware(req, res, next) {
   }
 }
 
-// requires req.playerUser
-async function versionHistoryMiddleware(req, res, next) {
+async function passiveHealingMiddleware(req, res, next) {
   const user = req.playerUser
-  const action = req.path.substr(1)
-  usersCollRef.doc(user.id)
-      .collection('version-history')
-      .doc(`${Date.now()}_${action}`)
-      .set({
-        ...user,
-        action: action
-      })
+  if (user.substatus.indexOf('resting') === 0) {
+    const restingRate = (user.substatus.indexOf('repair bot') > -1 ? 65 : 80) + 2 * user.level
+    const timeSince = (Date.now() - user.timerEnd) / 1000
+    const gainedHealth = Math.min(Math.round(timeSince / restingRate), 6)
+    user.health = Math.min(user.health + gainedHealth, user.maxHealth)
+  }
   next()
 }
 
@@ -152,29 +150,29 @@ async function performanceWrapperMiddleware(req, res, next) {
 /////////////////////////////////////////////////////////////////////
 
 async function markManualRead(req) {
-  return await updateStatus(req.playerUser.id, 'deciding')
+  return updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
 }
 
 async function visitTradingPost(req) {
-  return await updateSubstatus(req.playerUser.id, 'trading')
+  return updateUserFields(req, { [usersCollFields.substatus.name]: 'trading' })
 }
 
 async function leaveTradingPost(req) {
-  return await updateSubstatus(req.playerUser.id, 'idle')
+  return updateUserFields(req, { [usersCollFields.substatus.name]: 'idle' })
 }
 
 async function generateOptions(req) {
-  return await updateStatus(req.playerUser.id, 'deciding')
+  return updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
 }
 
 async function standGround(req) {
-  const { id, chest, equipment, health, maxHealth } = req.playerUser
+  const { chest, equipment, health, maxHealth } = req.playerUser
   const optionValue = req.chosenOption.value
   const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
   const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
   const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
   const newHp = Math.min(Math.max(health - optionValue, 0), newMaxHp)
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: newHp,
@@ -184,11 +182,11 @@ async function standGround(req) {
 }
 
 async function retreatDownstairs(req) {
-  const { id, equipment, health, level, maxHealth } = req.playerUser
+  const { equipment, health, level, maxHealth } = req.playerUser
   const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
   const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
   const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: Math.min(health - req.chosenOption.value, newMaxHp),
@@ -198,16 +196,15 @@ async function retreatDownstairs(req) {
 }
 
 async function claimKey(req) {
-  const { id, chest } = req.playerUser
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: true,
-    [usersCollFields.chest.name]: chest + Math.round(req.chosenOption.value / 4)
+    [usersCollFields.chest.name]: req.playerUser.chest + Math.round(req.chosenOption.value / 4)
   })
 }
 
 async function siphonPotion(req) {
-  const { id, equipment } = req.playerUser
+  const { equipment } = req.playerUser
   const optionValue = req.chosenOption.value
   let timerValue = optionValue
   const fieldMap = {}
@@ -216,7 +213,7 @@ async function siphonPotion(req) {
     timerValue /= 3
   }
 
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...fieldMap,
     ...getTimerData(timerValue),
     [usersCollFields.substatus.name]: 'idle',
@@ -225,9 +222,9 @@ async function siphonPotion(req) {
 }
 
 async function drinkPotion(req) {
-  const { id, health, maxHealth, potion } = req.playerUser
+  const { health, maxHealth, potion } = req.playerUser
   const healAmount = Math.min(maxHealth - health, potion)
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...getTimerData(healAmount),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: health + healAmount,
@@ -236,18 +233,17 @@ async function drinkPotion(req) {
 }
 
 async function climbStairs(req) {
-  const { id, level } = req.playerUser
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...getTimerData(15),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: false,
-    [usersCollFields.level.name]: level + 1
+    [usersCollFields.level.name]: req.playerUser.level + 1
   })
 }
 
 async function searchTreasure(req) {
-  const { id, chest, gold } = req.playerUser
-  return await updateUserFields(id, {
+  const { chest, gold } = req.playerUser
+  return updateUserFields(req, {
     ...getTimerData(5),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
@@ -256,18 +252,17 @@ async function searchTreasure(req) {
 }
 
 async function buyEquipment(req) {
-  const { id, equipment, gold } = req.playerUser
+  const { equipment, gold } = req.playerUser
   const { price, quantity, type } =  req.chosenOption.value
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     [usersCollFields.gold.name]: gold  - price,
     [usersCollFields.equipment.name]: utils.addEquipment(equipment, type, quantity)
   })
 }
 
 async function embraceDeath(req) {
-  const { id, level } = req.playerUser
-  return await updateUserFields(id, {
-    ...getTimerData((10 * level + 200)),
+  return updateUserFields(req, {
+    ...getTimerData((10 * req.playerUser.level + 200)),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: 0,
@@ -281,18 +276,17 @@ async function embraceDeath(req) {
 }
 
 async function hireConvoy(req) {
-  const { id, gold } = req.playerUser
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...getTimerData(10),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.location.name]: 'the village',
-    [usersCollFields.gold.name]: gold - req.chosenOption.value,
+    [usersCollFields.gold.name]: req.playerUser.gold - req.chosenOption.value,
     [usersCollFields.maxHealth.name]: 100
   })
 }
 
 async function takeRest(req) {
-  const { id, health, level, maxHealth, equipment } = req.playerUser
+  const { health, level, maxHealth, equipment } = req.playerUser
   const equipmentType = 'repair bot'
   const hasEquipment = utils.hasEquipment(equipment, equipmentType)
   const fieldMap = {}
@@ -302,7 +296,7 @@ async function takeRest(req) {
     timeVal -= 15
   }
 
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...fieldMap,
     ...getTimerData(timeVal * 2),
     [usersCollFields.substatus.name]: hasEquipment ? 'resting repair bot' : 'resting',
@@ -311,11 +305,11 @@ async function takeRest(req) {
 }
 
 async function hireLyle(req) {
-  const { id, gold, health, maxHealth, timerEnd } = req.playerUser
+  const { gold, health, maxHealth, timerEnd } = req.playerUser
   const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
   const currentHealth = Math.max(health + passiveHeal, maxHealth)
   const activeHeal = Math.min(maxHealth - currentHealth, req.chosenOption.value)
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...getTimerData(0),
     [usersCollFields.gold.name]: gold - activeHeal,
     [usersCollFields.health.name]: health + activeHeal
@@ -323,9 +317,9 @@ async function hireLyle(req) {
 }
 
 async function toFortress(req) {
-  const { id, health, maxHealth, timerEnd } = req.playerUser
+  const { health, maxHealth, timerEnd } = req.playerUser
   const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
-  return await updateUserFields(id, {
+  return updateUserFields(req, {
     ...getTimerData(10),
     [usersCollFields.location.name]: 'fortress oblivion',
     [usersCollFields.health.name]: Math.max(health + passiveHeal, maxHealth)
@@ -333,14 +327,12 @@ async function toFortress(req) {
 }
 
 async function toVillage(req) {
-  await usersCollRef
-      .doc(req.playerUser.id)
-      .update({
-        ...getTimerData(210),
-        [usersCollFields.substatus.name]: 'idle',
-        [usersCollFields.location.name]: 'the village',
-        [usersCollFields.maxHealth.name]: 100
-      })
+  return updateUserFields(req, {
+    ...getTimerData(210),
+    [usersCollFields.substatus.name]: 'idle',
+    [usersCollFields.location.name]: 'the village',
+    [usersCollFields.maxHealth.name]: 100
+  })
 }
 
 async function seekEncounter(req) {
@@ -402,15 +394,15 @@ async function reportResult(req, res) {
   const { encounterId, id } = req.playerUser
   const opponentId = encounterId.split('_').slice(1).find(s => s !== id)
 
-  const encounterDocRef = encountersCollRef.doc(encounterId)
-  const encounterDoc = await encounterDocRef.get()
-
-  const encounter = encounterDoc.data()
-  await updateUserFields(id, {
+  const ret = await updateUserFields(req, {
     [usersCollFields.status.name]: 'deciding',
     [usersCollFields.substatus.name]: playerWon ? 'post-win' : 'post-loss',
     [usersCollFields.encounterResult.name]: result
   })
+
+  const encounterDocRef = encountersCollRef.doc(encounterId)
+  const encounterDoc = await encounterDocRef.get()
+  const encounter = encounterDoc.data()
 
   if (encounter.result) {
     const message = 'results already entered for encounter'
@@ -425,31 +417,33 @@ async function reportResult(req, res) {
     [encountersCollFields.winner.name]: playerWon ? id : opponentId,
     [encountersCollFields.loser.name]: playerWon ? opponentId : id,
   })
-  await updateUserFields(opponentId, {
+  await updateUserFieldsForUser(opponentId === encounter.player1Id ? encounter.player1 : encounter.player2, {
     [usersCollFields.status.name]: 'deciding',
     [usersCollFields.substatus.name]: 'post-encounter',
     [usersCollFields.encounterResult.name]: result * -1
   })
+
+  return ret
 }
 
 async function confirmResult(req) {
-  await actOnEncounterResult(req.playerUser, true)
+  await actOnEncounterResult(req, true)
 }
 
 async function disputeResult(req) {
-  await actOnEncounterResult(req.playerUser, false)
+  await actOnEncounterResult(req, false)
 }
 
 /////////////////////////////////////////////////////////////////////
 
-async function actOnEncounterResult(player, isConfirmed) {
-  const { id, encounterId, encounterResult } = player
+async function actOnEncounterResult(req, isConfirmed) {
+  const { encounterId, encounterResult } = req.playerUser
   const fieldToUpdate = isConfirmed ? encountersCollFields.resultConfirmed : encountersCollFields.resultDisputed
-  await updateUserFields(id, {
+  await updateUserFields(req, {
     [usersCollFields.status.name]: 'deciding',
     [usersCollFields.substatus.name]: encounterResult > 0 ? 'post-win' : 'post-loss'
   })
-  await encountersCollRef.doc(encounterId).update({
+  encountersCollRef.doc(encounterId).update({
     [fieldToUpdate.name]: true,
   })
 }
@@ -490,14 +484,21 @@ function getRandomSubstring(str, minChars) {
   return chars.join('')
 }
 
-async function updateStatus(id, status) {
-  return await updateUserFields(id, { [usersCollFields.status.name]: status })
+async function updateUserFields(req, updatedFields) {
+  return await updateUserFieldsForUser(req.playerUser, updatedFields)
 }
 
-async function updateSubstatus(id, substatus) {
-  return await updateUserFields(id, { [usersCollFields.substatus.name]: substatus })
-}
-
-async function updateUserFields(id, fieldMap) {
-  return await usersCollRef.doc(id).update(fieldMap)
+async function updateUserFieldsForUser(user, updatedFields) {
+  const updatedOptions = utils.getOptions({
+    ...user,
+    ...updatedFields // overlay updated values onto user copy
+  })
+  const fieldMap = {
+    health: user.health,
+    ...updatedFields,
+    ...updatedOptions,
+    action: user.action
+  }
+  await usersCollRef.doc(user.id).update(fieldMap)
+  return { ...user, ...fieldMap}
 }
