@@ -274,6 +274,7 @@ async function embraceDeath(req) {
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.health.name]: 0,
     [usersCollFields.maxHealth.name]: 100,
+    [usersCollFields.level.name]: 1,
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.potion.name]: 0,
   })
