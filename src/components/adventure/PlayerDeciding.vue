@@ -1,8 +1,10 @@
 <template>
   <v-container>
-    <v-layout row>
-      <v-flex xs12>
-        <h4>{{ player.optionsTitle | capitalize({ onlyFirstLetter: true }) }}</h4>
+    <v-row justify="center">
+      <v-flex xs12 style="margin-bottom:20px;">
+        <v-divider></v-divider>
+        <h4 style="margin: 7px 0; text-align: center">{{ player.optionsTitle | capitalize({ onlyFirstLetter: true }) }}</h4>
+        <v-divider></v-divider>
       </v-flex>
 
       <v-flex
@@ -20,7 +22,7 @@
           {{ option.subheading }}
         </v-btn>
       </v-flex>
-    </v-layout>
+    </v-row>
   </v-container>
 </template>
 
@@ -47,7 +49,7 @@
         } catch(e) {
           console.error(e)
         }
-        this.loading = false
+        setTimeout(() => this.loading = false, 1500)
       }
     }
   }

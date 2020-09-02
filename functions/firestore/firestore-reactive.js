@@ -14,7 +14,10 @@ exports.onUserUpdated = firestore
     .onUpdate(async (snap, context) => {
       const before = snap.before.data()
       const after = snap.after.data()
-      if (before.status === after.status && before.substatus === after.substatus) {
+      if (before.status === after.status
+          && before.substatus === after.substatus
+          && before.gold === after.gold
+          && before.chest === after.chest) {
         return
       }
 

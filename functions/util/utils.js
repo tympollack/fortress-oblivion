@@ -203,15 +203,22 @@ exports.hasEquipment = (equipment, type) => {
   return equipment.findIndex(e => e.type === type) > -1
 }
 
+exports.addEquipment = (equipment, type, quantity = 1) => {
+  const equipmentIndex = equipment.findIndex(e => e.type === type)
+  const newEquipment = equipment.concat()
+  equipmentIndex === -1
+    ? newEquipment.push({quantity, type})
+    : newEquipment[equipmentIndex].quantity += quantity
+  return newEquipment
+}
+
 exports.subtractEquipment = (equipment, type, quantity = 1) => {
+  const newEquipment = equipment.concat()
   const equipmentIndex = equipment.findIndex(e => e.type === type)
   if (equipmentIndex > -1) {
-    const newEquipment = equipment.concat()
-    if (equipment[equipmentIndex].quantity === 1) {
-      newEquipment.splice(equipmentIndex, 1)
-    } else {
-      newEquipment[equipmentIndex].quantity--
-    }
-    return newEquipment
+    equipment[equipmentIndex].quantity > quantity
+      ? newEquipment[equipmentIndex].quantity -= quantity
+      : newEquipment.splice(equipmentIndex, 1)
   }
+  return newEquipment
 }
