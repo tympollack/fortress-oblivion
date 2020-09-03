@@ -395,6 +395,7 @@ async function seekEncounter(req) {
 }
 
 async function abandonQueue(req) {
+  await queueCollRef.doc(req.playerUser.id).delete()
   return updateUserFields(req, {
     [usersCollFields.status.name]: 'deciding'
   })
@@ -402,8 +403,16 @@ async function abandonQueue(req) {
 
 async function reportResult(req, res) {
   const result = req.body.data.result
-  const playerWon = result > 0
   const { encounterId, id } = req.playerUser
+
+  if (isNaN(result)) {
+    const message = 'result must be a number'
+    console.error(message, encounterId)
+    res.status(400).send(message)
+    return
+  }
+
+  const playerWon = result > 0
   const opponentId = encounterId.split('_').slice(1).find(s => s !== id)
 
   const ret = await updateUserFields(req, {

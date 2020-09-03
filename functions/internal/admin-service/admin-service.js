@@ -41,7 +41,7 @@ async function isAdminMiddleware(req, res, next) {
   }
 
   const user = doc.data()
-  if (!user.isAdmin || !user.isGod) {
+  if (!user.isAdmin && !user.isGod) {
     console.error('admin access denied for', id)
     res.status(403).send()
     return

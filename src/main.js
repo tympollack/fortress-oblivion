@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Vue2Filters from 'vue2-filters'
+import VueMoment from 'vue-moment'
 import vuetify from './plugins/vuetify'
 import App from './App.vue'
 import firebase from './config/firebase'
@@ -23,6 +24,7 @@ Vue.prototype.$functions = async (path, data = {}) => {
 
 Vue.use(Vuex)
 Vue.use(Vue2Filters)
+Vue.use(VueMoment)
 
 new Vue({
   // store,
