@@ -322,7 +322,7 @@ async function toFortress(req) {
   return updateUserFields(req, {
     ...getTimerData(10),
     [usersCollFields.location.name]: 'fortress oblivion',
-    [usersCollFields.health.name]: Math.max(health + passiveHeal, maxHealth)
+    [usersCollFields.health.name]: Math.min(health + passiveHeal, maxHealth)
   })
 }
 
