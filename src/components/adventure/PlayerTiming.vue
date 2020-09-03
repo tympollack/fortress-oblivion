@@ -27,12 +27,12 @@
         this.timeRemaining = Math.max(Math.ceil((this.player.timerEnd - now) / 1000), 0)
         this.timeRemaining
             ? setTimeout(() => this.computeTimeRemaining(), 1000)
-            : this.callServer('timer action complete at ' + now)
+            : setTimeout(() => this.callServer('timer action complete at ' + now), 1000)
       },
 
-      callServer(clientMessage) {
+      async callServer(clientMessage) {
         try {
-          this.$functions('actions/generate-options', { clientMessage })
+          await this.$functions('actions/generate-options', { clientMessage })
         } catch (e) {
           setTimeout(() => this.callServer('retrying after 10 seconds'), 10000)
         }

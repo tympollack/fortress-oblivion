@@ -64,7 +64,7 @@ module.exports = routes
 // adds req.playerUser
 async function userWrapperMiddleware(req, res, next) {
 
-  console.log(req.user)
+  // console.log(req.user)
   console.log(req.method, req.path, req.body)
   const id = req.body.data.id
   const user = await getUserById(id)
