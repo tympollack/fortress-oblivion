@@ -41,6 +41,7 @@ routes.post('/hire-lyle', hireLyle)
 // fortress
 routes.post('/to-village', toVillage)
 routes.post('/seek-encounter', seekEncounter)
+routes.post('/abandon-queue', abandonQueue)
 routes.post('/visit-trading-post', visitTradingPost)
 routes.post('/leave-trading-post', leaveTradingPost)
 routes.post('/stand-ground', standGround)
@@ -85,6 +86,7 @@ async function userWrapperMiddleware(req, res, next) {
 async function verifyOptionMiddleware(req, res, next) {
   const chosenOption = req.path.substr(1)
   if ([
+      'abandon-queue',
       'generate-options',
       'read-manual',
       'report-result',
@@ -120,7 +122,11 @@ async function verifyOptionMiddleware(req, res, next) {
 // requires req.playerUser
 async function verifyTimerMiddleware(req, res, next) {
   const user = req.playerUser
-  if (Date.now() - user.timerStart >= user.timerLength * 1000) {
+  const timeSince = (Date.now() - user.timerStart) / 1000
+  if (timeSince >= user.timerLength) {
+    next()
+  } else if (timeSince >= user.timerLength + 10) {
+    console.log('timer leniency shown', user.id, req.path)
     next()
   } else {
     const message = 'action attempted before timer expiry'
@@ -386,6 +392,12 @@ async function seekEncounter(req) {
   }
 
   await Promise.all(promises)
+}
+
+async function abandonQueue(req) {
+  return updateUserFields(req, {
+    [usersCollFields.status.name]: 'deciding'
+  })
 }
 
 async function reportResult(req, res) {

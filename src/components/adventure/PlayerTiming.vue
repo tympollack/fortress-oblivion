@@ -27,7 +27,7 @@
         this.timeRemaining = Math.max(Math.ceil((this.player.timerEnd - now) / 1000), 0)
         this.timeRemaining
             ? setTimeout(() => this.computeTimeRemaining(), 1000)
-            : setTimeout(() => this.callServer('timer action complete at ' + now), 1000)
+            : setTimeout(() => this.callServer('timer action complete at ' + now), 777)
       },
 
       async callServer(clientMessage) {
