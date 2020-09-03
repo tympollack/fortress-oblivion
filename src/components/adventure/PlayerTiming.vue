@@ -1,5 +1,5 @@
 <template>
-  <div>time remaining: {{ timeRemaining }}</div>
+  <div>time remaining: {{ timeRemaining | duration('humanize') }}</div>
 </template>
 
 <script>
@@ -24,7 +24,7 @@
     methods: {
       computeTimeRemaining() {
         const now = Date.now()
-        this.timeRemaining = Math.max(Math.ceil((this.player.timerEnd - now) / 1000), 0)
+        this.timeRemaining = Math.max(this.player.timerEnd - now, 0)
         this.timeRemaining
             ? setTimeout(() => this.computeTimeRemaining(), 1000)
             : setTimeout(() => this.callServer('timer action complete at ' + now), 777)
