@@ -174,7 +174,7 @@ exports.getOptions = user => {
           }
 
           if (!user.hasKey && user.chest) {
-            addOption('search-treasure', 'search for treasure')
+            addOption('search-treasure', 'search for treasure', `let's find some gold`)
           }
 
           if (user.gold && user.level % 3 === 0) {
