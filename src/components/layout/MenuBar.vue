@@ -20,6 +20,9 @@
         <v-list-item @click="$emit('about-click')">
           <v-list-item-title>About</v-list-item-title>
         </v-list-item>
+        <v-list-item @click="$emit('settings-click')">
+          <v-list-item-title>Settings</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="logout()">
           <v-list-item-title>Logout</v-list-item-title>
         </v-list-item>

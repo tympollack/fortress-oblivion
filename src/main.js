@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import Vue2Filters from 'vue2-filters'
 import VueMoment from 'vue-moment'
+import momentTimezone from 'moment-timezone'
 import vuetify from './plugins/vuetify'
 import App from './App.vue'
 import firebase from './config/firebase'
@@ -9,6 +10,7 @@ import firebase from './config/firebase'
 import '@mdi/font/css/materialdesignicons.css'
 
 Vue.config.productionTip = false
+Vue.prototype.$timezones = momentTimezone
 Vue.prototype.$firebase = firebase
 Vue.prototype.$timestamp = firebase.firestore.FieldValue.serverTimestamp()
 Vue.prototype.$functions = async (path, data = {}) => {
@@ -24,7 +26,9 @@ Vue.prototype.$functions = async (path, data = {}) => {
 
 Vue.use(Vuex)
 Vue.use(Vue2Filters)
-Vue.use(VueMoment)
+Vue.use(VueMoment, {
+  momentTimezone
+})
 
 new Vue({
   // store,

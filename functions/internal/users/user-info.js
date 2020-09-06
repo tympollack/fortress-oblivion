@@ -1,19 +1,15 @@
-const shareable = module.parent.shareable
-const db = shareable.db
-const url = shareable.url + '/users'
-const collectionName = shareable.config.firestore.collections.users.name
-const collRef = db.collection(collectionName)
+const { config, db } = module.parent.shareable
+const collectionsConfig = config.firestore.collections
+
+const usersCollConfig = collectionsConfig.users
+const usersCollFields = usersCollConfig.fields
+const usersCollRef = db.collection(usersCollConfig.name)
 
 //    /internal/users/
 const routes = require('express').Router()
 
-routes.get('/', queryUsers)
 routes.post('/', addUser)
-
-routes.get('/:id', getUser)
-routes.put('/:id', addUserById)
-routes.patch('/:id', updateUser)
-routes.delete('/:id', deleteUser)
+routes.post('/save-settings', saveSettings)
 
 module.exports = routes
 
@@ -21,48 +17,9 @@ module.exports = routes
 
 const getUserById = id => {
   return new Promise(async resolve => {
-    const doc = await collRef.doc(id).get()
+    const doc = await usersCollRef.doc(id).get()
     resolve(doc.data())
   })
-}
-
-async function findByUsername(req, res) {
-  const username = req.params.username
-  console.log('POST /users/exists', username)
-
-  let userFoundByUsername = false
-  const users = await collRef.where('username', '==', username).get()
-  users.forEach(doc => {
-    if (doc.exists) userFoundByUsername = true
-  })
-  console.log(userFoundByUsername ? 'found user by username' : 'user not found for username', username)
-  res.status(200).json({ data: userFoundByUsername })
-}
-
-async function queryUsers(req, res) {
-  const query = req.query
-  console.log('GET /users', query ? query : 'ALL')
-
-  const content = []
-  const collection = await collRef.get()
-  collection.forEach(doc => {
-    const item = doc.data()
-    item._links = [{
-      self: {
-        href: url + doc.id
-      }
-    }]
-    content.push(item)
-  })
-
-  const ret = {
-    content: content,
-    _links: [{
-      _rel: 'users',
-      href: url
-    }]
-  }
-  res.status(200).json(ret).send()
 }
 
 async function addUser(req, res) {
@@ -82,6 +39,7 @@ async function addUser(req, res) {
     chest: 0,
     created: now,
     equipment: [],
+    expansionsOwned: 'WRG1BEHFC2KUAMLN',
     gold: 0,
     id,
     isAdmin: false,
@@ -97,6 +55,7 @@ async function addUser(req, res) {
     timerEnd: now,
     timerLength: 0,
     timerStart: now,
+    timeZone: '',
     username
   }
 
@@ -104,38 +63,10 @@ async function addUser(req, res) {
   res.status(200).json({ data: player })
 }
 
-async function getUser(req, res) {
-  const id = req.params.id
-  console.log('GET /users', id)
-
-  const user = await getUserById(id)
-  if (user) {
-    console.log('requested user found', id)
-    res.status(200).json(user)
-    return
-  }
-  console.log('user not found for id', id)
-  res.status(404).send()
-}
-
-async function addUserById(req, res) {
+async function saveSettings(req, res) {
   const body = req.body
-  const id = req.params.id
-  console.log('PUT /users', id, body)
-
-  if (!id) {
-    res.status(400).send()
-    return
-  }
-
-  await collRef.doc(id).set(body)
-  res.status(200).send()
-}
-
-async function updateUser(req, res) {
-  const body = req.body
-  const id = req.params.id
-  console.log('PATCH /users', id, body)
+  const { id, expansionsOwned, timezone } = body.data
+  console.log(req.method, req.path, body)
 
   const doesExist = id && await getUserById(id)
   if (!doesExist) {
@@ -143,15 +74,9 @@ async function updateUser(req, res) {
     return
   }
 
-  await collRef.doc(id).update(body)
-  res.status(200).send()
-}
-
-// Warning: Deleting a document does not delete its subcollections!
-async function deleteUser(req, res) {
-  const id = req.params.id
-  console.log('DELETE /users', id)
-
-  await collRef.doc(id).delete()
-  res.status(200).send()
+  await usersCollRef.doc(id).update({
+    [usersCollFields.expansionsOwned.name]: expansionsOwned,
+    [usersCollFields.timezone.name]: timezone,
+  })
+  res.status(200).send({data:{}})
 }

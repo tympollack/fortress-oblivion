@@ -78,6 +78,7 @@ async function resetWorld(req, res, next) {
       chest: 0,
       created: now,
       equipment: [],
+      expansionsOwned: user.expansionsOwned || 'WRG1BEHFC2KUAMLN',
       gold: 0,
       id: user.id,
       isAdmin: user.isAdmin || false,
@@ -93,6 +94,7 @@ async function resetWorld(req, res, next) {
       timerEnd: now,
       timerLength: 0,
       timerStart: now,
+      timezone: user.timezone || '',
       username: user.username
     }))
   })

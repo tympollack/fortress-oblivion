@@ -170,6 +170,18 @@ module.exports = {
             }
           },
 
+          expansionsOwned: {
+            doc: 'expansions owned by player',
+            name: {
+              format: String,
+              default: 'expansionsOwned'
+            },
+            path: {
+              format: String,
+              default: 'users/{expansionsOwned}'
+            },
+          },
+
           gold: {
             doc: 'gold amount',
             name: {
@@ -429,6 +441,18 @@ module.exports = {
               format: String,
               default: 'users/{timerStart}'
             }
+          },
+
+          timezone: {
+            doc: 'timezone of player',
+            name: {
+              format: String,
+              default: 'timezone'
+            },
+            path: {
+              format: String,
+              default: 'users/{timezone}'
+            },
           },
 
           username: {

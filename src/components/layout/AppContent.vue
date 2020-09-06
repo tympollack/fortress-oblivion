@@ -4,6 +4,7 @@
         :show-admin="isAdmin"
         @about-click="screen = SCREEN.ABOUT"
         @admin-click="screen = SCREEN.ADMIN"
+        @settings-click="screen = SCREEN.SETTINGS"
     ></MenuBar>
 
     <v-container class="display-area">
@@ -16,6 +17,9 @@
       ></AdventureScreen>
       <ChatScreen v-else-if="screenName === SCREEN.CHAT.name"></ChatScreen>
       <ChronicleScreen v-else-if="screenName === SCREEN.CHRONICLE.name"></ChronicleScreen>
+      <SettingsScreen
+          v-else-if="screenName === SCREEN.SETTINGS.name"
+          :player="player"></SettingsScreen>
     </v-container>
 
     <BottomNav
@@ -35,6 +39,7 @@
   import ChatScreen from '../chat/ChatScreen'
   import ChronicleScreen from '../chronicle/ChronicleScreen'
   import AdminScreen from '../admin/AdminScreen'
+  import SettingsScreen from '../settings/SettingsScreen'
 
   export default {
     name: 'AppContent',
@@ -46,6 +51,7 @@
         ADVENTURE: { name: 'adventure', number: 1 },
         CHAT: { name: 'chat', number: 3 },
         CHRONICLE: { name: 'chronicle', number: 2 },
+        SETTINGS: { name: 'settings', number: 0 },
       },
       screen: { name: 'adventure', number: 1 },
       player: {}
@@ -58,7 +64,8 @@
       BottomNav,
       ChatScreen,
       ChronicleScreen,
-      MenuBar
+      MenuBar,
+      SettingsScreen
     },
 
     created() {
