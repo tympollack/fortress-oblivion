@@ -33,6 +33,10 @@ routes.post('/read-manual', markManualRead)
 routes.post('/report-result', reportResult)
 routes.post('/confirm-result', confirmResult)
 routes.post('/dispute-result', disputeResult)
+routes.post('/visit-bank', visitBank)
+routes.post('/leave-bank', leaveBank)
+routes.post('/deposit-gold', depositGold)
+routes.post('/withdraw-gold', withdrawGold)
 
 // village
 routes.post('/to-fortress', toFortress)
@@ -90,6 +94,9 @@ async function verifyOptionMiddleware(req, res, next) {
       'generate-options',
       'read-manual',
       'report-result',
+      'leave-bank',
+      'deposit-gold',
+      'withdraw-gold'
       ].includes(chosenOption)) {
     next()
     return
@@ -165,6 +172,36 @@ async function visitTradingPost(req) {
 
 async function leaveTradingPost(req) {
   return updateUserFields(req, { [usersCollFields.substatus.name]: 'idle' })
+}
+
+async function visitBank(req) {
+  await updateUserFields(req, { [usersCollFields.status.name]: 'banking' })
+}
+
+async function leaveBank(req) {
+  await updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
+}
+
+async function depositGold(req) {
+  const { body, playerUser } = req
+  const { amount } = body.data
+  const { bank, gold } = playerUser
+  const trueAmount = isNaN(amount) || amount < 0 ? 0 : Math.min(amount, gold)
+  await updateUserFields(req, {
+    [usersCollFields.bank.name]: bank + trueAmount,
+    [usersCollFields.gold.name]: gold - trueAmount,
+  })
+}
+
+async function withdrawGold(req) {
+  const { body, playerUser } = req
+  const { amount } = body.data
+  const { bank, gold } = playerUser
+  const trueAmount = isNaN(amount) || amount < 0 ? 0 : Math.min(amount, bank)
+  await updateUserFields(req, {
+    [usersCollFields.bank.name]: bank - trueAmount,
+    [usersCollFields.gold.name]: gold + trueAmount,
+  })
 }
 
 async function generateOptions(req) {

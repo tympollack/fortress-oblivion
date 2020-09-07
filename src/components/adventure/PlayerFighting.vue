@@ -1,41 +1,41 @@
 <template>
   <v-container>
-    <v-layout row>
-      <v-flex xs12>
-        <h3>You have encountered {{ opponent }}, FIGHT!</h3>
-      </v-flex>
+    <v-row><h3>You have encountered {{ opponent }}, FIGHT!</h3></v-row>
 
-      <v-flex xs12>
-        <h5>Opponent</h5>
-        <h4>{{ opponent }}</h4>
-      </v-flex>
+    <v-row><h5>Opponent</h5></v-row>
+    <v-row><h4>{{ opponent }}</h4></v-row>
 
-      <v-flex xs12>
-        <h5>Format</h5>
-        <h4>{{ encounter.format }}</h4>
-      </v-flex>
+    <v-row><h5>Format</h5></v-row>
+    <v-row><h4>{{ encounter.format }}</h4></v-row>
 
-      <v-flex xs12>
-        <h5>Pace of play</h5>
-        <h4>{{ encounter.playPace }}</h4>
-      </v-flex>
+    <v-row><h5>Pace of play</h5></v-row>
+    <v-row><h4>{{ encounter.playPace }}</h4></v-row>
 
-      <v-flex xs12>
+    <v-form
+        ref="form"
+        v-model="valid"
+        lazy-validation
+    >
+      <v-row>
         <v-text-field
             dark
             v-model="result"
+            :rules="[rules.required, rules.integer]"
             label="Authority difference"
         ></v-text-field>
-      </v-flex>
+      </v-row>
+    </v-form>
 
-      <v-flex xs6>
-        <v-btn
-            dark
-            :loading="loading"
-            @click=reportResult()
-        >Report Result</v-btn>
-      </v-flex>
-    </v-layout>
+    <v-row>
+      <v-btn
+          dark
+          block
+          tile
+          x-large
+          :loading="loading"
+          @click=reportResult()
+      >Report Result</v-btn>
+    </v-row>
   </v-container>
 </template>
 
@@ -53,7 +53,12 @@
     data: () => ({
       encounter: {},
       result: null,
-      loading: false
+      loading: false,
+      valid: true,
+      rules: {
+        required: v => !!v || 'Required',
+        integer: v => (!isNaN(v) && Number.isInteger(Number(v))) && Number(v) !== 0 || 'Must be a non-zero integer',
+      }
     }),
 
     computed: {
@@ -72,7 +77,18 @@
     },
 
     methods: {
+      validateForm () {
+        this.$refs.form.validate()
+      },
+
+      resetForm () {
+        this.$refs.form.reset()
+      },
+
       async reportResult() {
+        this.validateForm()
+        if (!this.valid) return
+
         this.loading = true
         try {
           await this.$functions('actions/report-result', { result: this.result })

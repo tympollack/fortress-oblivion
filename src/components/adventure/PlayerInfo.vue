@@ -4,7 +4,7 @@
       <v-flex xs12>
         <h3>{{ player.username }}</h3>
         {{ currentHealth }} / {{ player.maxHealth }} HP
-        | {{ player.gold }} gold
+        | {{ player.gold | number('0,0') }} gold
         <span v-if="player.hasKey">| +key </span>
         <span v-if="player.potion">| {{ player.potion }} HP potion </span>
       </v-flex>

@@ -36,6 +36,7 @@ async function addUser(req, res) {
   const now = Date.now()
   const player = {
     action: 'created',
+    bank: 0,
     chest: 0,
     created: now,
     equipment: [],

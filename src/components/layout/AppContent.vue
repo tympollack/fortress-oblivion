@@ -105,6 +105,7 @@
   .display-area {
     min-height: 444px;
     overflow-y: auto;
+    overflow-x: hidden;
     background: #272727;
     color: lightgrey;
   }

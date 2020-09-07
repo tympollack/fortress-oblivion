@@ -113,6 +113,10 @@ exports.getOptions = user => {
         const lyleHealAmount = Math.ceil(Math.min(damageTaken, user.gold, 19) * .8)
         addOption('hire-lyle', 'hire High Priest Lyle', `${lyleHealAmount}g - faster healing for gold`, lyleHealAmount)
       }
+
+      if (user.gold || user.bank) {
+        addOption('visit-bank', 'visit the ATM', 'access thy money')
+      }
       break
 
     case 'fortress oblivion':
@@ -187,6 +191,10 @@ exports.getOptions = user => {
               addOption('drink-potion', 'drink your potion', `drink to heal ${healAmount} health`)
             }
             addOption('take-rest', 'take a rest', 'very slow healing')
+          }
+
+          if (user.gold || user.bank) {
+            addOption('visit-bank', 'visit the ATM', 'access thy money')
           }
 
           if (user.level === 1 && !user.hasKey && !user.potion) {

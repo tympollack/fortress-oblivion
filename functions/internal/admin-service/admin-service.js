@@ -75,6 +75,7 @@ async function resetWorld(req, res, next) {
     const user = doc.data()
     promises.push(docRef.set({
       action: 'reset',
+      bank: 0,
       chest: 0,
       created: now,
       equipment: [],

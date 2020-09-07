@@ -64,6 +64,7 @@ module.exports = {
         },
 
         fields: {
+
           action: {
             doc: 'action taken',
             name: {
@@ -73,6 +74,18 @@ module.exports = {
             path: {
               format: String,
               default: 'users/{action}'
+            }
+          },
+
+          bank: {
+            doc: 'gold banked by player',
+            name: {
+              format: String,
+              default: 'bank'
+            },
+            path: {
+              format: String,
+              default: 'users/{bank}'
             }
           },
 
@@ -312,6 +325,7 @@ module.exports = {
               format: String,
               default: 'users/{options}'
             },
+
             apiPath: {
               doc: 'api path of option',
               name: {
@@ -323,6 +337,7 @@ module.exports = {
                 default: 'users/options/{apiPath}'
               }
             },
+
             heading: {
               doc: 'option heading',
               name: {
@@ -334,6 +349,7 @@ module.exports = {
                 default: 'users/options/{heading}'
               }
             },
+
             subheading: {
               doc: 'option subheading',
               name: {

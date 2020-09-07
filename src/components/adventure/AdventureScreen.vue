@@ -16,8 +16,12 @@
     <div v-else>
       <PlayerInfo :player="player"></PlayerInfo>
 
+      <PlayerBanking
+          v-if="player.status === STATUS.BANKING"
+          :player="player"
+      ></PlayerBanking>
       <PlayerDeciding
-          v-if="player.status === STATUS.DECIDING"
+          v-else-if="player.status === STATUS.DECIDING"
           :player="player"
       ></PlayerDeciding>
       <PlayerFighting
@@ -38,6 +42,7 @@
 
 <script>
   import AboutScreen from '../about/AboutScreen'
+  import PlayerBanking from './PlayerBanking'
   import PlayerDeciding from './PlayerDeciding'
   import PlayerFighting from './PlayerFighting'
   import PlayerInfo from './PlayerInfo'
@@ -50,6 +55,7 @@
 
     components: {
       AboutScreen,
+      PlayerBanking,
       PlayerDeciding,
       PlayerFighting,
       PlayerInfo,
@@ -68,6 +74,7 @@
     data: () => ({
       STATUS: {
         ABOUT: 'about',
+        BANKING: 'banking',
         DECIDING: 'deciding',
         FIGHTING: 'fighting',
         QUEUEING: 'queueing',
