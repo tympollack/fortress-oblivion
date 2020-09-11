@@ -60,7 +60,7 @@ async function addUser(req, res) {
     username
   }
 
-  await collRef.doc(id).set(player)
+  await usersCollRef.doc(id).set(player)
   res.status(200).json({ data: player })
 }
 

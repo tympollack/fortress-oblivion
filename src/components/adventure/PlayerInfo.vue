@@ -56,9 +56,9 @@
 
     methods: {
       computeGainedHealth() {
-        const computeGainedHealthOverTime = timeAmount => {
+        const computeGainedHealthOverTime = minutes => {
           setTimeout(() => this.computeGainedHealth(), 60000)
-          return Math.max(Math.floor((Date.now() - this.player.timerEnd) / (timeAmount * 1000)), 0)
+          return Math.max(Math.floor((Date.now() - this.player.timerEnd) / (minutes * 60 * 1000)), 0)
         }
 
         // passive healing in village

@@ -145,7 +145,7 @@ async function verifyTimerMiddleware(req, res, next) {
 async function passiveHealingMiddleware(req, res, next) {
   const user = req.playerUser
   if (user.substatus.indexOf('resting') === 0) {
-    const restingRate = (user.substatus.indexOf('repair bot') > -1 ? 65 : 80) + 2 * user.level
+    const restingRate = (user.substatus.indexOf('repair bot') > -1 ? 65 : 80) * 60 + 2 * user.level
     const timeSince = (Date.now() - user.timerEnd) / 1000
     const gainedHealth = Math.min(Math.round(timeSince / restingRate), 6)
     user.health = Math.min(user.health + gainedHealth, user.maxHealth)
@@ -361,7 +361,7 @@ async function hireLyle(req) {
 
 async function toFortress(req) {
   const { health, maxHealth, timerEnd } = req.playerUser
-  const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
+  const passiveHeal = Math.floor((Date.now() - timerEnd) / (10 * 60 * 1000))
   return updateUserFields(req, {
     ...getTimerData(10),
     [usersCollFields.location.name]: 'fortress oblivion',
@@ -513,14 +513,15 @@ function getUserById(id) {
   })
 }
 
-function getTimerData(timerLength) {
+function getTimerData(minutes = 0) {
   const now = Date.now()
+  const seconds = minutes * 60;
   const ret = {
-    [usersCollFields.timerEnd.name]: now + timerLength * 1000,
-    [usersCollFields.timerLength.name]: timerLength,
+    [usersCollFields.timerEnd.name]: now + seconds * 1000,
+    [usersCollFields.timerLength.name]: seconds,
     [usersCollFields.timerStart.name]: now
   }
-  if (timerLength) {
+  if (minutes) {
     ret[usersCollFields.status.name] = 'timing'
   }
   return ret
