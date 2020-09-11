@@ -2,7 +2,7 @@
   <v-bottom-navigation
       dark
       grow
-      color="red"
+      color="red darken-3"
       :value="value"
   >
     <!--  here as a default to grey out all options if a diff screen focused  -->
