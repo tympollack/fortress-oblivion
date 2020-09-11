@@ -10,17 +10,17 @@
 
     <v-btn @click="$emit('adventure-click')">
       <span>Adventure</span>
-      <v-icon>mdi-history</v-icon>
+      <v-icon>mdi-sword</v-icon>
     </v-btn>
 
     <v-btn @click="$emit('chronicle-click')">
       <span>Chronicle</span>
-      <v-icon>mdi-heart</v-icon>
+      <v-icon>mdi-castle</v-icon>
     </v-btn>
 
     <v-btn @click="$emit('chat-click')">
       <span>Chat</span>
-      <v-icon>mdi-map-marker</v-icon>
+      <v-icon>mdi-chat-remove</v-icon>
     </v-btn>
   </v-bottom-navigation>
 </template>
