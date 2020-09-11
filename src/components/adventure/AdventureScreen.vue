@@ -8,6 +8,9 @@
       <AboutScreen></AboutScreen>
       <v-btn
           dark
+          block
+          tile
+          x-large
           :loading="loading"
           @click="markManualRead"
       >Got it</v-btn>

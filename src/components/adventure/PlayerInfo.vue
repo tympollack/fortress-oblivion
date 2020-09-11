@@ -1,27 +1,26 @@
 <template>
   <v-container>
-    <v-layout row>
-      <v-flex xs12>
-        <h3>{{ player.username }}</h3>
-        {{ currentHealth }} / {{ player.maxHealth }} HP
-        | {{ player.gold | number('0,0') }} gold
-        <span v-if="player.hasKey">| +key </span>
-        <span v-if="player.potion">| {{ player.potion }} HP potion </span>
-      </v-flex>
+    <v-row><h3>{{ player.username }}</h3></v-row>
+    <v-row>{{ currentHealth }} / {{ player.maxHealth }} HP
+      | {{ player.gold | number('0,0') }} gold
+      <span v-if="player.hasKey">| +key </span>
+      <span v-if="player.potion">| {{ player.potion }} HP potion </span>
+    </v-row>
 
-      <v-flex xs12>
-        <h4>{{ player.location | capitalize }}</h4>
-        <span v-if="isPlayerInFortress">{{ player.level | ordinal({ includeNumber: true }) }} Floor</span>
-      </v-flex>
+    <v-row><h4>{{ player.location | capitalize }}</h4></v-row>
+    <v-row v-if="isPlayerInFortress">{{ player.level | ordinal({ includeNumber: true }) }} Floor</v-row>
 
-      <v-flex v-if="(player.equipment || []).length" xs12>
-        <h4>Equipment</h4>
-        <div v-for="equipment in player.equipment" :key="equipment.type">
-          {{ equipment.quantity | pluralize(equipment.type, { includeNumber: true }) | capitalize }}
-        </div>
-      </v-flex>
+    <template v-if="(player.equipment || []).length">
+      <v-row><h4>Equipment</h4></v-row>
+      <v-row v-for="equipment in player.equipment" :key="equipment.type">
+        {{ equipment.quantity | pluralize(equipment.type, { includeNumber: true }) | capitalize }}
+      </v-row>
+    </template>
+    <br/>
+    <v-row justify="center">
+      <v-divider></v-divider>
+    </v-row>
 
-    </v-layout>
   </v-container>
 </template>
 

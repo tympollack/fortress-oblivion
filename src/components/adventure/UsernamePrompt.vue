@@ -1,26 +1,23 @@
 <template>
-  <v-layout row wrap>
-    <v-flex xs12>
-      <p>To enter the Fortress Oblivion, you must present a Star Realms username.</p>
-      <h4 class="headline text-xs-center">{{ errorMessage }}</h4>
-    </v-flex>
+  <v-container>
+    <v-row><p>To enter the Fortress Oblivion, you must present a Star Realms username.</p></v-row>
+    <v-row><h4 class="headline text-xs-center">{{ errorMessage }}</h4></v-row>
+    <br />
 
-    <v-flex xs12>
-      <v-text-field
-          dark
-          v-model="username"
-          label="Star Realms IGN"
-      ></v-text-field>
-    </v-flex>
+    <v-row><v-text-field dark v-model="username" label="Star Realms IGN"></v-text-field></v-row>
 
-    <v-flex xs6>
+    <br />
+    <v-row>
       <v-btn
           dark
+          block
+          tile
+          x-large
           :loading="loading"
           @click="createUser()"
       >Submit</v-btn>
-    </v-flex>
-  </v-layout>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
