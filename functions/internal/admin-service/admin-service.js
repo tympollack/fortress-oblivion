@@ -94,6 +94,7 @@ async function resetWorld(req, res, next) {
       substatus: 'idle',
       timerEnd: now,
       timerLength: 0,
+      timerMessage: '',
       timerStart: now,
       timezone: user.timezone || '',
       username: user.username

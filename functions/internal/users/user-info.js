@@ -55,6 +55,7 @@ async function addUser(req, res) {
     substatus: 'idle',
     timerEnd: now,
     timerLength: 0,
+    timerMessage: '',
     timerStart: now,
     timeZone: '',
     username

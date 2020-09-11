@@ -1,5 +1,21 @@
 <template>
-  <div>time remaining: {{ timeRemaining | duration('humanize') }}</div>
+  <v-container>
+    <v-row justify="center">
+      <h4>{{ player.timerMessage | capitalize({ onlyFirstLetter: true }) }}</h4>
+    </v-row>
+
+    <v-row justify="center">
+      <div class="text-center ma-12">
+        <v-progress-circular
+            rotate=270
+            size=269
+            :value="timerPercent"
+            width=5
+            color="red darken-3"
+        >{{ timeRemaining | duration('humanize') }}</v-progress-circular>
+      </div>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -14,7 +30,8 @@
     },
 
     data: () => ({
-      timeRemaining: 0
+      timeRemaining: 0,
+      timerPercent: 0
     }),
 
     created() {
@@ -24,9 +41,11 @@
     methods: {
       computeTimeRemaining() {
         const now = Date.now()
-        this.timeRemaining = Math.max(this.player.timerEnd - now, 0)
+        const { timerEnd, timerLength, timerStart } = this.player
+        this.timerPercent = Math.min((now - timerStart) / 1000 / timerLength * 100, 100)
+        this.timeRemaining = Math.max(timerEnd - now, 0)
         this.timeRemaining
-            ? setTimeout(() => this.computeTimeRemaining(), 1000)
+            ? setTimeout(() => this.computeTimeRemaining(), this.timeRemaining < 300000 ? 1000 : 60000)
             : setTimeout(() => this.callServer('timer action complete at ' + now), 777)
       },
 

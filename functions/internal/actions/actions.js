@@ -252,13 +252,13 @@ async function siphonPotion(req) {
   let timerValue = optionValue
   const fieldMap = {}
   if (utils.hasEquipment(equipment, 'plasma bot')) {
-    fieldMap[usersCollFields.equipment.name] = utils.subtractEquipment(equipment, 'plasma bot')
+    fieldMap[usersCollFields.equipment.name] = utils.subtractEquipment(equipment, 'plasma bot.')
     timerValue /= 3
   }
 
   return updateUserFields(req, {
     ...fieldMap,
-    ...getTimerData(timerValue),
+    ...getTimerData(timerValue, 'siphoning a potion.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.potion.name]: optionValue
   })
@@ -268,7 +268,7 @@ async function drinkPotion(req) {
   const { health, maxHealth, potion } = req.playerUser
   const healAmount = Math.min(maxHealth - health, potion)
   return updateUserFields(req, {
-    ...getTimerData(healAmount),
+    ...getTimerData(healAmount, 'drinking your potion.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: health + healAmount,
     [usersCollFields.potion.name]: potion - healAmount
@@ -277,7 +277,7 @@ async function drinkPotion(req) {
 
 async function climbStairs(req) {
   return updateUserFields(req, {
-    ...getTimerData(15),
+    ...getTimerData(15, 'climbing the stairs.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.level.name]: req.playerUser.level + 1
@@ -287,7 +287,7 @@ async function climbStairs(req) {
 async function searchTreasure(req) {
   const { chest, gold } = req.playerUser
   return updateUserFields(req, {
-    ...getTimerData(5),
+    ...getTimerData(5, 'searching for treasure.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: gold + chest
@@ -305,7 +305,7 @@ async function buyEquipment(req) {
 
 async function embraceDeath(req) {
   return updateUserFields(req, {
-    ...getTimerData((10 * req.playerUser.level + 200)),
+    ...getTimerData(10 * req.playerUser.level + 200, 'being dragged back to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: 0,
@@ -320,7 +320,7 @@ async function embraceDeath(req) {
 
 async function hireConvoy(req) {
   return updateUserFields(req, {
-    ...getTimerData(10),
+    ...getTimerData(10, 'riding to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.gold.name]: req.playerUser.gold - req.chosenOption.value,
@@ -341,7 +341,7 @@ async function takeRest(req) {
 
   return updateUserFields(req, {
     ...fieldMap,
-    ...getTimerData(timeVal * 2),
+    ...getTimerData(timeVal * 2, 'resting in the fortress.'),
     [usersCollFields.substatus.name]: hasEquipment ? 'resting repair bot' : 'resting',
     [usersCollFields.health.name]: Math.min(health + 2, maxHealth)
   })
@@ -353,7 +353,7 @@ async function hireLyle(req) {
   const currentHealth = Math.max(health + passiveHeal, maxHealth)
   const activeHeal = Math.min(maxHealth - currentHealth, req.chosenOption.value)
   return updateUserFields(req, {
-    ...getTimerData(0),
+    ...getTimerData(0, 'being healed.'),
     [usersCollFields.gold.name]: gold - activeHeal,
     [usersCollFields.health.name]: health + activeHeal
   })
@@ -363,7 +363,7 @@ async function toFortress(req) {
   const { health, maxHealth, timerEnd } = req.playerUser
   const passiveHeal = Math.floor((Date.now() - timerEnd) / (10 * 60 * 1000))
   return updateUserFields(req, {
-    ...getTimerData(10),
+    ...getTimerData(10, 'heading to The Fortress Oblivion. Good luck..'),
     [usersCollFields.location.name]: 'fortress oblivion',
     [usersCollFields.health.name]: Math.min(health + passiveHeal, maxHealth)
   })
@@ -371,7 +371,7 @@ async function toFortress(req) {
 
 async function toVillage(req) {
   return updateUserFields(req, {
-    ...getTimerData(210),
+    ...getTimerData(210, 'walking to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.maxHealth.name]: 100
@@ -513,12 +513,13 @@ function getUserById(id) {
   })
 }
 
-function getTimerData(minutes = 0) {
+function getTimerData(minutes = 0, message = '') {
   const now = Date.now()
   const seconds = minutes * 60;
   const ret = {
     [usersCollFields.timerEnd.name]: now + seconds * 1000,
     [usersCollFields.timerLength.name]: seconds,
+    [usersCollFields.timerMessage.name]: `you are ${message}`,
     [usersCollFields.timerStart.name]: now
   }
   if (minutes) {

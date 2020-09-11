@@ -447,6 +447,18 @@ module.exports = {
             }
           },
 
+          timerMessage: {
+            doc: 'message to display during timer',
+            name: {
+              format: String,
+              default: 'timerMessage'
+            },
+            path: {
+              format: String,
+              default: 'users/{timerMessage}'
+            }
+          },
+
           timerStart: {
             doc: 'time last timed action started',
             name: {
