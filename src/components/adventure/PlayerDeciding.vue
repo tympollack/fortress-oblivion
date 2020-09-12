@@ -4,7 +4,8 @@
     <br />
     <v-row
         v-if="!loading"
-        v-for="(option, i) in player.options">
+        v-for="(option, i) in player.options"
+        class="mb-5">
       <v-btn
           dark
           block

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-row>
     <div v-if="!player.id"></div>
 
     <UsernamePrompt v-else-if="!player.username"></UsernamePrompt>
@@ -16,7 +16,7 @@
       >Got it</v-btn>
     </div>
 
-    <div v-else>
+    <template v-else>
       <PlayerInfo :player="player"></PlayerInfo>
 
       <PlayerBanking
@@ -39,8 +39,8 @@
           v-else-if="player.status === STATUS.TIMING"
           :player="player"
       ></PlayerTiming>
-    </div>
-  </div>
+    </template>
+  </v-row>
 </template>
 
 <script>

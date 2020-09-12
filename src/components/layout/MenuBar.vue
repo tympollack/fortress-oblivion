@@ -1,5 +1,5 @@
 <template>
-  <v-system-bar height="50" dark>
+  <v-system-bar height="50" dark fixed app>
     <v-spacer></v-spacer>
     <v-menu bottom left>
       <template v-slot:activator="{ on, attrs }">

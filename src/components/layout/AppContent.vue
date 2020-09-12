@@ -1,5 +1,5 @@
 <template>
-  <v-container class="wrapper ma-0 pa-0">
+  <v-container fluid pa-0>
     <MenuBar
         :show-admin="isAdmin"
         @about-click="screen = SCREEN.ABOUT"
@@ -7,7 +7,7 @@
         @settings-click="screen = SCREEN.SETTINGS"
     ></MenuBar>
 
-    <v-container class="display-area">
+    <v-container fluid class="display-area" mt-5>
   <!--  i know there's a better way to do this, but i forget right now, so this is temp solution  -->
       <AboutScreen v-if="screenName === SCREEN.ABOUT.name"></AboutScreen>
       <AdminScreen v-else-if="screenName === SCREEN.ADMIN.name && isAdmin"></AdminScreen>
@@ -95,18 +95,8 @@
 </script>
 
 <style scoped>
-  .wrapper {
-    border: 1px solid darkslategrey;
-    width: 500px;
-    min-height: 500px;
-    overflow: hidden;
-  }
-
   .display-area {
-    min-height: 444px;
     overflow-y: auto;
     overflow-x: hidden;
-    background: #272727;
-    color: lightgrey;
   }
 </style>

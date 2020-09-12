@@ -1,6 +1,6 @@
 <template>
-  <v-app v-cloak>
-    <v-container>
+  <v-app class="app" v-cloak>
+    <v-container fluid>
       <div v-if="userId === ''" /> <!--  //todo show a something waiting for auth call  -->
       <UserLogin v-else-if="!userId" />
       <AppContent v-else></AppContent>
@@ -38,5 +38,8 @@
 </script>
 
 <style scoped>
-
+  .app {
+    background-color: #182026;
+    color: lightgrey;
+  }
 </style>

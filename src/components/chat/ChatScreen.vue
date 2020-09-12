@@ -1,5 +1,5 @@
 <template>
-  <div>chat placeholder</div>
+  <v-row>chat placeholder</v-row>
 </template>
 
 <script>

@@ -1,6 +1,8 @@
 <template>
   <v-bottom-navigation
+      app
       dark
+      fixed
       grow
       color="red darken-3"
       :value="value"
