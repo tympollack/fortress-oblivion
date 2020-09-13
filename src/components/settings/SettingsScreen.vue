@@ -30,25 +30,23 @@
     </v-row>
 
     <v-row>
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+      <AppButton
           :loading="loading"
           @click="save()"
-      >Save</v-btn>
+      >Save</AppButton>
     </v-row>
   </v-container>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
   import TimezonePicker from './TimezonePicker'
 
   export default {
     name: 'SettingsScreen',
 
     components: {
+      AppButton,
       TimezonePicker
     },
 

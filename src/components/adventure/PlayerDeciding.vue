@@ -6,23 +6,25 @@
         v-if="!loading"
         v-for="(option, i) in player.options"
         class="mb-5">
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+      <AppButton
+          :loading="loading"
+          :heading="option.heading"
+          :subheading="option.subheading"
           @click="optionClick(i)"
-      >
-        {{ option.heading | capitalize({ onlyFirstLetter: true }) }} <br/>
-        {{ option.subheading }}
-      </v-btn>
+      ></AppButton>
     </v-row>
   </v-container>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
+
   export default {
     name: 'PlayerDeciding',
+
+    components: {
+      AppButton
+    },
 
     props: {
       player: {

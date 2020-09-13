@@ -6,14 +6,10 @@
 
     <div v-else-if="player.status === STATUS.ABOUT">
       <AboutScreen></AboutScreen>
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+      <AppButton
           :loading="loading"
           @click="markManualRead"
-      >Got it</v-btn>
+      >Got it</AppButton>
     </div>
 
     <template v-else>
@@ -45,6 +41,7 @@
 
 <script>
   import AboutScreen from '../about/AboutScreen'
+  import AppButton from '../app/AppButton'
   import PlayerBanking from './PlayerBanking'
   import PlayerDeciding from './PlayerDeciding'
   import PlayerFighting from './PlayerFighting'
@@ -58,6 +55,7 @@
 
     components: {
       AboutScreen,
+      AppButton,
       PlayerBanking,
       PlayerDeciding,
       PlayerFighting,

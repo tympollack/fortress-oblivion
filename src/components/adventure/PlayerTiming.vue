@@ -1,8 +1,6 @@
 <template>
   <v-container>
-    <v-row justify="center">
-      <h4>{{ player.timerMessage | capitalize({ onlyFirstLetter: true }) }}</h4>
-    </v-row>
+    <v-row justify="center"><h4>{{ player.timerMessage | capitalize({ onlyFirstLetter: true }) }}</h4></v-row>
 
     <v-row justify="center">
       <div class="text-center ma-12">

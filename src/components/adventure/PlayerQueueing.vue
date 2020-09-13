@@ -1,32 +1,28 @@
 <template>
   <v-container>
 
-    <v-row justify="center">
-      <h4 style="margin: 7px 0;">Finding game...</h4>
-    </v-row>
-
-    <v-row justify="center">
-      <h5>Elapsed time: {{ elapsedTime | duration('humanize') }}</h5>
-    </v-row>
-
-    <v-row justify="center">
-      <v-btn
-          dark
-          class="mt-5"
-          block
-          tile
-          x-large
+    <v-row justify="center"><h4 style="margin: 7px 0;">Finding game...</h4></v-row>
+    <v-row justify="center"><h5>Elapsed time: {{ elapsedTime | duration('humanize') }}</h5></v-row>
+    <br />
+    <v-row>
+      <AppButton
           :loading="loading"
           @click="abandonQueue()"
-      >abandon queue</v-btn>
+      >abandon queue</AppButton>
     </v-row>
 
   </v-container>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
+
   export default {
     name: 'PlayerQueueing',
+
+    components: {
+      AppButton
+    },
 
     data: () => ({
       elapsedTime: 0,

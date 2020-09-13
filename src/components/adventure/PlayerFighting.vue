@@ -27,21 +27,23 @@
     </v-form>
 
     <v-row>
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+      <AppButton
           :loading="loading"
-          @click=reportResult()
-      >Report Result</v-btn>
+          @click="reportResult()"
+      >Report Result</AppButton>
     </v-row>
   </v-container>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
+
   export default {
     name: 'PlayerFighting',
+
+    components: {
+      AppButton
+    },
 
     props: {
       player: {

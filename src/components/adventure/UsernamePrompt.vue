@@ -8,21 +8,23 @@
 
     <br />
     <v-row>
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+      <AppButton
           :loading="loading"
           @click="createUser()"
-      >Submit</v-btn>
+      >Submit</AppButton>
     </v-row>
   </v-container>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
+
   export default {
     name: 'UsernamePrompt',
+
+    components: {
+      AppButton
+    },
 
     data: () => ({
       errorMessage: null,

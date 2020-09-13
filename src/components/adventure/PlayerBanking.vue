@@ -30,44 +30,40 @@
       </v-row>
     </v-form>
 
-    <v-row v-if="player.gold">
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+    <v-row v-if="player.gold" class="mb-5">
+      <AppButton
           :loading="loading"
           @click="depositGold()"
-      >Deposit Gold</v-btn>
+      >Deposit Gold</AppButton>
     </v-row>
 
-    <v-row v-if="player.bank">
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+    <v-row v-if="player.bank" class="mb-5">
+      <AppButton
           :loading="loading"
           @click="withdrawGold()"
-      >Withdraw Gold</v-btn>
+      >Withdraw Gold</AppButton>
     </v-row>
 
     <v-row>
-      <v-btn
-          dark
-          block
-          tile
-          x-large
+      <AppButton
           :loading="loading"
+          heading="leave"
+          subheading="i'm done here"
           @click="leaveBank()"
-      >Leave<br/>I'm done here</v-btn>
+      ></AppButton>
     </v-row>
   </v-container>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
+
   export default {
     name: 'PlayerBanking',
+
+    components: {
+      AppButton
+    },
 
     props: {
       player: {

@@ -5,18 +5,22 @@
     </v-flex>
 
     <v-flex xs6>
-      <v-btn
-          dark
-          :loading="loading.RESET_DATABASE"
+      <AppButton
+          :loading="loading"
           @click="resetDatabase()"
-      >Reset Database</v-btn>
+      >Reset Database</AppButton>
     </v-flex>
   </v-layout>
 </template>
 
 <script>
+  import AppButton from '../app/AppButton'
+
   export default {
     name: 'AdminScreen',
+    components: {
+      AppButton
+    },
 
     data: () => ({
       loading: {
