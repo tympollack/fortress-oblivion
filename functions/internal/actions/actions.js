@@ -349,9 +349,9 @@ async function takeRest(req) {
 
 async function hireLyle(req) {
   const { gold, health, maxHealth, timerEnd } = req.playerUser
-  const passiveHeal = Math.floor((Date.now() - timerEnd) / 10000)
-  const currentHealth = Math.max(health + passiveHeal, maxHealth)
-  const activeHeal = Math.min(maxHealth - currentHealth, req.chosenOption.value)
+  const passiveHeal = Math.max(Math.floor((Date.now() - timerEnd) / 10000), 0)
+  const currentHealth = Math.min(health + passiveHeal, maxHealth)
+  const activeHeal = Math.max(Math.min(maxHealth - currentHealth, req.chosenOption.value), 0)
   return updateUserFields(req, {
     ...getTimerData(0, 'being healed.'),
     [usersCollFields.gold.name]: gold - activeHeal,
@@ -446,8 +446,8 @@ async function reportResult(req, res) {
   const result = req.body.data.result
   const { encounterId, id } = req.playerUser
 
-  if (isNaN(result)) {
-    const message = 'result must be a number'
+  if ((!isNaN(result) && Number.isInteger(Number(result))) && Number(result) !== 0) {
+    const message = 'result must be a non-zero integer'
     console.error(message, encounterId)
     res.status(400).send(message)
     return
@@ -558,10 +558,10 @@ async function updateUserFieldsForUser(user, updatedFields) {
     ...updatedFields // overlay updated values onto user copy
   })
   const fieldMap = {
-    health: user.health,
+    [usersCollFields.health.name]: user.health,
     ...updatedFields,
     ...updatedOptions,
-    action: user.action
+    [usersCollFields.action.name]: user.action
   }
   await usersCollRef.doc(user.id).update(fieldMap)
   return { ...user, ...fieldMap}
