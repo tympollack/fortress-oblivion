@@ -381,9 +381,8 @@ async function toVillage(req) {
 async function seekEncounter(req) {
   const user = req.playerUser
   const userId = req.playerUser.id
-  const userDocRef = usersCollRef.doc(userId)
   const time = Date.now()
-  await userDocRef.update({
+  await updateUserFields(req, {
     [usersCollFields.queuedSince.name]: time,
     [usersCollFields.status.name]: 'queueing'
   })
@@ -403,9 +402,9 @@ async function seekEncounter(req) {
   }
 
   // todo this should eventually be matchmaking service
-  const queuedUserDocRef = usersCollRef.doc(queuedUserId)
-  const queuedUser = await queuedUserDocRef.get()
-  if (queuedUser.data().status === 'queueing') {
+  const queuedUserDoc = await usersCollRef.doc(queuedUserId).get()
+  const queuedUser = queuedUserDoc.data()
+  if (queuedUser.status === 'queueing') {
     promises.push(queueCollRef.doc(queuedUserId).delete())
 
     const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
@@ -413,7 +412,7 @@ async function seekEncounter(req) {
       [encountersCollFields.format.name]: chooseRandomEncounterFormat(),
       [encountersCollFields.player1.name]: user,
       [encountersCollFields.player1Id.name]: userId,
-      [encountersCollFields.player2.name]: queuedUser.data(),
+      [encountersCollFields.player2.name]: queuedUser,
       [encountersCollFields.player2Id.name]: queuedUserId,
       [encountersCollFields.playPace.name]: '48-hour',
       [encountersCollFields.start.name]: time,
@@ -424,18 +423,23 @@ async function seekEncounter(req) {
       [usersCollFields.fightingSince.name]: time,
       [usersCollFields.status.name]: 'fighting',
     }
-    promises.push(userDocRef.update(fightingUpdateObj))
-    promises.push(queuedUserDocRef.update(fightingUpdateObj))
+    promises.push(updateUserFields(req, fightingUpdateObj))
+    promises.push(updateUserFieldsForUser(queuedUser, fightingUpdateObj))
   }
 
   await Promise.all(promises)
 }
 
 async function abandonQueue(req) {
-  await queueCollRef.doc(req.playerUser.id).delete()
-  return updateUserFields(req, {
-    [usersCollFields.status.name]: 'deciding'
-  })
+  const { playerUser } = req
+  const docRef = queueCollRef.doc(playerUser.id)
+  const doc = await docRef.get()
+  if (doc.exists) {
+    await docRef.delete()
+    return updateUserFields(req, {
+      [usersCollFields.status.name]: 'deciding'
+    })
+  }
 }
 
 async function reportResult(req, res) {

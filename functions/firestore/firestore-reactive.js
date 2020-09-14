@@ -16,9 +16,9 @@ exports.onUserUpdated = firestore
       const after = snap.after.data()
       usersCollRef.doc(after.id)
           .collection('version-history')
-          .doc(`${Date.now()}_${after.action}`)
+          .doc(`${Date.now()}_${before.action}`)
           .set({
-            ...after,
-            action: after.action
+            ...before,
+            action: before.action
           })
     })

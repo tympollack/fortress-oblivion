@@ -25,6 +25,9 @@ routes.use(isAdminMiddleware)
 routes.use(performanceWrapperMiddleware)
 
 routes.post('/reset-world', resetWorld)
+routes.post('/finish-player-timer', finishPlayerTimer)
+// routes.post('/ff-player', resetWorld)
+// routes.post('/rewind-player', resetWorld)
 
 module.exports = routes
 
@@ -63,7 +66,6 @@ async function performanceWrapperMiddleware(req, res, next) {
 /////////////////////////////////////////////////////////////////////
 
 async function resetWorld(req, res, next) {
-  console.log('started function')
   const users = await usersCollRef.get()
   const now = Date.now()
   const promises = []
@@ -105,4 +107,12 @@ async function resetWorld(req, res, next) {
   promises.push(utils.deleteCollection(db, 'world/state/queue'))
 
   await Promise.all(promises)
+}
+
+async function finishPlayerTimer(req) {
+  const { managedId } = req.body.data
+  await usersCollRef.doc(managedId).update({
+    [usersCollFields.timerEnd.name]: Date.now(),
+    [usersCollFields.timerLength.name]: 0
+  })
 }

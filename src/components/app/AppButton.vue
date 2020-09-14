@@ -5,6 +5,7 @@
       dark
       tile
       x-large
+      :disabled="disabled"
       :loading="loading"
       @click="$emit('click')"
   >
@@ -18,6 +19,7 @@
     name: 'AppButton',
 
     props: {
+      disabled: Boolean,
       loading: Boolean,
       subheading: String,
       heading: String,

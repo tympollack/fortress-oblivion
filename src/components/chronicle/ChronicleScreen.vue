@@ -21,10 +21,11 @@
           .where('location', '==', 'fortress oblivion')
           .orderBy('level', 'desc')
           .onSnapshot(users => {
-            this.playersInFortress = []
+            const players = []
             users.forEach(u => {
-              this.playersInFortress.push(u.data())
+              players.push(u.data())
             })
+            this.playersInFortress = players
           })
     }
   }
