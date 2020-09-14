@@ -95,6 +95,7 @@
 
         this.loading = true
         try {
+          this.$firebase.auth().useDeviceLanguage()
           await this.$firebase.auth().createUserWithEmailAndPassword(this.email.trim(), this.password)
           await this.$firebase.auth().currentUser.sendEmailVerification()
           this.errorMessage = 'Check your email for account verification.'

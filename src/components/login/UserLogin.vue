@@ -14,48 +14,46 @@
             column
         >
           <v-card-title primary-title>
-            <FormSignup v-if="signup"
-                        @login-click="signup = false"
-            />
-            <FormLogin v-else
-                       @signup-click="signup = true"
-            />
+            <FormSignup
+                v-if="signup"
+                @login-click="signup = false"
+            ></FormSignup>
+            <FormForgotPassword
+                v-else-if="passwordReset"
+                @back-click="passwordReset = false"
+            ></FormForgotPassword>
+            <FormLogin
+                v-else
+                @signup-click="signup = true"
+                @forgot-password-click="passwordReset = true"
+            ></FormLogin>
           </v-card-title>
-
-          <!--        <v-progress-circular-->
-          <!--                v-if="loading"-->
-          <!--                color="primary-lighten-1"-->
-          <!--                indeterminate-->
-          <!--        ></v-progress-circular>-->
-          <!--        <template v-else-if="errorMessage">{{ errorMessage }}</template>-->
-          <!--        <slot v-else></slot>-->
 
         </v-layout>
 
-        <v-footer class="no-print"
-                  color="white"
-                  height="16px"
-        >
-        </v-footer>
+        <v-footer class="no-print" color="white" height="16px"></v-footer>
       </v-card>
     </v-flex>
   </v-layout>
 </template>
 
 <script>
-  import FormSignup from './FormSignup'
+  import FormForgotPassword from './FormForgotPassword'
   import FormLogin from './FormLogin'
+  import FormSignup from './FormSignup'
 
   export default {
     name: 'UserLogin',
 
     components: {
+      FormForgotPassword,
       FormLogin,
       FormSignup
     },
 
     data: () => ({
-      signup: false
+      signup: false,
+      passwordReset: false
     })
   }
 </script>

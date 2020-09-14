@@ -1,7 +1,8 @@
 <template>
   <div>
-    <h3 class="headline mb-0 text-xs-center">Login or <a @click="$emit('signup-click')">Sign Up </a></h3>
-    <h6><a @click="$emit('forgot-password-click')">(forgot password)</a></h6>
+    <h3 class="headline mb-0 text-xs-center">
+      <a @click="$emit('back-click')">Back to Login</a>
+    </h3>
     <v-layout row wrap>
       <v-flex xs12>
         <h4 class="headline text-xs-center">{{ errorMessage }}</h4>
@@ -18,18 +19,9 @@
               v-model="email"
               :rules="[rules.required, rules.email]"
               label="Email"
-              @keyup.enter="loginEmail()"
+              @keyup.enter="sendPasswordReset()"
           ></v-text-field>
 
-          <v-text-field
-              v-model="password"
-              :rules="[rules.required]"
-              :append-icon="showPass ? 'visibility' : 'visibility_off'"
-              :type="showPass ? 'text' : 'password'"
-              label="Password"
-              @click:append="showPass = !showPass"
-              @keyup.enter="loginEmail()"
-          ></v-text-field>
         </v-form>
       </v-flex>
 
@@ -37,8 +29,8 @@
         <v-btn
             dark
             :loading="loading"
-            @click="loginEmail"
-        >Login</v-btn>
+            @click="sendPasswordReset"
+        >Send Password Reset Email</v-btn>
       </v-flex>
     </v-layout>
   </div>
@@ -46,12 +38,10 @@
 
 <script>
   export default {
-    name: 'FormLogin',
+    name: 'FormForgotPassword',
 
     data: () => ({
       email: null,
-      password: null,
-      showPass: false,
       errorMessage: '',
       rules: {
         required: v => !!v || 'Required',
@@ -66,21 +56,18 @@
         this.$refs.form.validate()
       },
 
-      loginEmail: async function () {
+      sendPasswordReset: async function () {
         this.validateForm()
         if (!this.valid) return
 
         this.loading = true
         try {
-          await this.$firebase.auth().signInWithEmailAndPassword(this.email.trim(), this.password)
-          const user = this.$firebase.auth().currentUser
-          if (user && !user.emailVerified) {
-            this.errorMessage = 'This email address has not yet been verified.'
-            this.password = null
-          }
+          this.$firebase.auth().useDeviceLanguage()
+          await this.$firebase.auth().sendPasswordResetEmail(this.email.trim())
+          this.errorMessage = `A password reset email was sent to ${this.email}.`
+          this.email = ''
         } catch (e) {
           this.errorMessage = e.message
-          this.password = null
         }
         this.loading = false
       },
