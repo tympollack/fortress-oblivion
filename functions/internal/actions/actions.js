@@ -533,15 +533,17 @@ function getTimerData(minutes = 0, message = '') {
 }
 
 function chooseRandomEncounterFormat() {
-  return `${getRandomSubstring('VWR', 1)}-${getRandomSubstring('G1BEHFC2KUALN')}`
+  return `${getRandomSubstring('VWR', 1, 1)}-${getRandomSubstring('G1BEHFC2KUALN', 0, 0, '1')}`
 }
 
-function getRandomSubstring(str, minChars) {
+function getRandomSubstring(str, minChars, maxChars, mustHaves) {
   const chars = []
   do {
     for (const c of str) {
-      if (Math.round(Math.random())) {
-        chars.push(c)
+      if (Math.round(Math.random()) || (mustHaves && mustHaves.includes(c))) {
+        if (!maxChars || chars.length < maxChars) {
+          chars.push(c)
+        }
       }
     }
   } while(chars.length < minChars)
