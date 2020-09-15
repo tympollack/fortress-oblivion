@@ -409,7 +409,7 @@ async function seekEncounter(req) {
 
     const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
     promises.push(encountersCollRef.doc(gameId).set({
-      [encountersCollFields.format.name]: chooseRandomEncounterFormat(),
+      [encountersCollFields.format.name]: chooseRandomEncounterFormat(user.expansionsOwned, queuedUser.expansionsOwned),
       [encountersCollFields.player1.name]: user,
       [encountersCollFields.player1Id.name]: userId,
       [encountersCollFields.player2.name]: queuedUser,
@@ -532,8 +532,10 @@ function getTimerData(minutes = 0, message = '') {
   return ret
 }
 
-function chooseRandomEncounterFormat() {
-  return `${getRandomSubstring('VWR', 1, 1)}-${getRandomSubstring('G1BEHFC2KUALN', 0, 0, '1')}`
+function chooseRandomEncounterFormat(player1Expansions, player2Expansions) {
+  const commonBaseSets = 'V' + 'WR'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c))
+  const commonSets = 'G1BEHFC2KUALN'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c))
+  return `${getRandomSubstring(commonBaseSets, 1, 1)}-${getRandomSubstring(commonSets, 0, 0, '1')}`
 }
 
 function getRandomSubstring(str, minChars, maxChars, mustHaves) {
