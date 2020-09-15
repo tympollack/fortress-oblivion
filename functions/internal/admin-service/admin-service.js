@@ -28,6 +28,7 @@ routes.post('/reset-world', resetWorld)
 routes.post('/finish-player-timer', finishPlayerTimer)
 // routes.post('/ff-player', resetWorld)
 // routes.post('/rewind-player', resetWorld)
+routes.post('/delete-player', deletePlayer)
 
 module.exports = routes
 
@@ -112,7 +113,14 @@ async function resetWorld(req, res, next) {
 async function finishPlayerTimer(req) {
   const { managedId } = req.body.data
   await usersCollRef.doc(managedId).update({
+    [usersCollFields.action.name]: 'ADMIN-finish-timer',
     [usersCollFields.timerEnd.name]: Date.now(),
     [usersCollFields.timerLength.name]: 0
   })
+}
+
+async function deletePlayer(req) {
+  const { managedId } = req.body.data
+  await utils.deleteCollection(db, `users/${managedId}/version-history`)
+  await usersCollRef.doc(managedId).delete()
 }
