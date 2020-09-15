@@ -1,34 +1,37 @@
 <template>
   <v-container>
-    <v-row>
-      <h4 class="headline">Settings</h4>
+    <v-row><h4 class="headline">Settings</h4></v-row>
+
+    <v-row><TimezonePicker :selected.sync="timezone"></TimezonePicker></v-row>
+
+    <v-row dark>
+      <v-select
+          class="settings-select"
+          dark
+          multiple
+          label="Expansions Owned"
+          v-model="expansionsSelected"
+          :items="expansionList"
+      >
+        <template v-slot:prepend-item>
+          <v-list-item ripple @click="toggleAllExpansions">
+            <v-list-item-action>
+              <v-icon :color="expansionsSelected.length > 0 ? 'red darken-3' : ''">{{ selectAllExpansionsIcon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>Select All</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider class="mt-2"></v-divider>
+        </template>
+
+        <template v-slot:selection="{ item }">
+          <span>{{ item }}</span>
+        </template>
+      </v-select>
     </v-row>
 
-    <v-row class="mt-3">
-      Timezone
-    </v-row>
-
-    <v-row>
-      <TimezonePicker :selected.sync="timezone"></TimezonePicker>
-    </v-row>
-
-    <v-row class="mt-3">
-      Expansions owned
-    </v-row>
-
-    <v-row>
-      <v-col v-for="expansion in expansionList" :key="expansion">
-        <v-checkbox
-            dark
-            color="red darken-3"
-            class="grey-checkbox ma-0 pa-0"
-            v-model="expansionsSelected"
-            :label="expansion"
-            :value="expansion"
-        ></v-checkbox>
-      </v-col>
-    </v-row>
-
+    <br />
     <v-row>
       <AppButton
           :loading="loading"
@@ -64,6 +67,22 @@
       timezone: ''
     }),
 
+    computed: {
+      areAllExpansionsSelected() {
+        return this.expansionsSelected.length === this.expansionList.length
+      },
+
+      areSomeExpansionsSelected() {
+        return this.expansionsSelected.length > 0 && !this.areAllExpansionsSelected
+      },
+
+      selectAllExpansionsIcon () {
+        if (this.areAllExpansionsSelected) return 'mdi-close-box'
+        if (this.areSomeExpansionsSelected) return 'mdi-minus-box'
+        return 'mdi-checkbox-blank-outline'
+      },
+    },
+
     methods: {
       async save() {
         this.loading = true
@@ -73,6 +92,12 @@
           timezone: this.timezone
         })
         this.loading = false
+      },
+
+      toggleAllExpansions() {
+        this.$nextTick(() => {
+          this.expansionsSelected = this.areAllExpansionsSelected ? [] : this.expansionList.slice()
+        })
       },
     },
 
@@ -84,7 +109,4 @@
 </script>
 
 <style>
-  .grey-checkbox i {
-    color: grey !important;
-  }
 </style>

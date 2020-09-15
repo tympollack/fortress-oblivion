@@ -1,6 +1,7 @@
 <template>
   <v-select
       dark
+      label="Timezone"
       :items="options"
       v-model="privateSelected"
       @change="$emit('update:selected', privateSelected)"
