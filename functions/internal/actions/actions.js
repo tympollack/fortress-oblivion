@@ -446,7 +446,7 @@ async function reportResult(req, res) {
   const result = req.body.data.result
   const { encounterId, id } = req.playerUser
 
-  if ((!isNaN(result) && Number.isInteger(Number(result))) && Number(result) !== 0) {
+  if ((isNaN(result) || !Number.isInteger(Number(result))) || Number(result) === 0) {
     const message = 'result must be a non-zero integer'
     console.error(message, encounterId)
     res.status(400).send(message)

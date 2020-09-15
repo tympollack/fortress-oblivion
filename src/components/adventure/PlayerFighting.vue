@@ -1,15 +1,12 @@
 <template>
   <v-container>
-    <v-row><h3>You have encountered {{ opponent }}, FIGHT!</h3></v-row>
-
-    <v-row><h5>Opponent</h5></v-row>
-    <v-row><h4>{{ opponent }}</h4></v-row>
+    <v-row class="mb-5"><h3>You have encountered <span class="red--text text--darken-3">{{ opponent }}</span>, FIGHT!</h3></v-row>
 
     <v-row><h5>Format</h5></v-row>
-    <v-row><h4>{{ encounter.format }}</h4></v-row>
+    <v-row class="mb-5"><h4>{{ encounter.format }}</h4></v-row>
 
     <v-row><h5>Pace of play</h5></v-row>
-    <v-row><h4>{{ encounter.playPace }}</h4></v-row>
+    <v-row class="mb-5"><h4>{{ encounter.playPace }}</h4></v-row>
 
     <v-form
         ref="form"
@@ -17,17 +14,30 @@
         lazy-validation
     >
       <v-row>
+        <v-spacer></v-spacer>
+        <v-flex xs12 sm4><v-text-field
+            dark
+            outlined
+            v-model="playerResult"
+            :rules="[rules.required, rules.integer]"
+            label="Your Authority"
+        ></v-text-field></v-flex>
+        <v-spacer></v-spacer>
+        <v-flex xs12 sm4>
         <v-text-field
             dark
-            v-model="result"
+            outlined
+            v-model="opponentResult"
             :rules="[rules.required, rules.integer]"
-            label="Authority difference"
-        ></v-text-field>
+            :label="`${opponent}'s Authority`"
+        ></v-text-field></v-flex>
+        <v-spacer></v-spacer>
       </v-row>
     </v-form>
 
-    <v-row>
+    <v-row class="mt-5">
       <AppButton
+          :disabled="!encounterResult"
           :loading="loading"
           @click="reportResult()"
       >Report Result</AppButton>
@@ -54,7 +64,8 @@
 
     data: () => ({
       encounter: {},
-      result: null,
+      playerResult: 0,
+      opponentResult: 0,
       loading: false,
       valid: true,
       rules: {
@@ -67,15 +78,26 @@
       opponent() {
         return (this.encounter['player' + (this.encounter.player1Id === this.player.id ? '2' : '1')] || {}).username
       },
+
+      encounterResult() {
+        const isValid = (v) => !isNaN(v) && Number.isInteger(Number(v))
+        const { playerResult, opponentResult } = this
+        return isValid(playerResult)
+            && isValid(opponentResult)
+            && (playerResult < 0 || opponentResult < 0)
+            ? playerResult - opponentResult
+            : 0
+      }
     },
 
-    created() {
-      this.$firebase.firestore()
+    async created() {
+      const encounterDoc = await this.$firebase.firestore()
           .collection('world')
           .doc('state')
           .collection('encounters')
           .doc(this.player.encounterId)
-          .onSnapshot(doc => this.encounter = doc.data())
+          .get()
+      this.encounter = encounterDoc.data()
     },
 
     methods: {
@@ -89,11 +111,11 @@
 
       async reportResult() {
         this.validateForm()
-        if (!this.valid) return
+        if (!this.valid || !this.encounterResult) return
 
         this.loading = true
         try {
-          await this.$functions('actions/report-result', { result: this.result })
+          await this.$functions('actions/report-result', { result: this.encounterResult })
         } catch(e) {
           console.error(e)
         }
