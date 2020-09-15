@@ -575,6 +575,18 @@ module.exports = {
         },
 
         fields: {
+          disputeResolvedBy: {
+            doc: 'admin dispute resolved by',
+            name: {
+              format: String,
+              default: 'disputeResolvedBy'
+            },
+            path: {
+              format: String,
+              default: 'encounters/{disputeResolvedBy}'
+            }
+          },
+
           end: {
             doc: 'end',
             name: {

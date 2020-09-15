@@ -29,6 +29,7 @@ routes.post('/finish-player-timer', finishPlayerTimer)
 // routes.post('/ff-player', resetWorld)
 // routes.post('/rewind-player', resetWorld)
 routes.post('/delete-player', deletePlayer)
+routes.post('/resolve-dispute', resolveDispute)
 
 module.exports = routes
 
@@ -123,4 +124,49 @@ async function deletePlayer(req) {
   const { managedId } = req.body.data
   await utils.deleteCollection(db, `users/${managedId}/version-history`)
   await usersCollRef.doc(managedId).delete()
+}
+
+async function resolveDispute(req) {
+  const { id, encounterId, winnerId, loserId, result } = req.body.data
+  const getPlayerVersionBeforeEncounter = async (uid) => {
+    const docs = await usersCollRef
+        .doc(uid)
+        .collection('version-history')
+        .where('status', '==', 'queueing')
+        .orderBy('actionTime', 'desc')
+        .limit(1)
+        .get()
+
+    let ret = null
+    docs.forEach(doc => {
+      ret = doc.data()
+    })
+    return ret
+  }
+
+  const winner = await getPlayerVersionBeforeEncounter(winnerId)
+  const loser = await getPlayerVersionBeforeEncounter(loserId)
+
+  await Promise.all([
+      encountersCollRef.doc(encounterId).update({
+        [encountersCollFields.disputeResolvedBy.name]: id,
+        [encountersCollFields.result.name]: Math.abs(result),
+        [encountersCollFields.winner.name]: winnerId,
+        [encountersCollFields.loser.name]: loserId,
+      }),
+      utils.updateUserFieldsForUser(winner, {
+        [usersCollFields.encounterResult.name]: result,
+        [usersCollFields.status.name]: 'deciding',
+        [usersCollFields.substatus.name]: 'post-win',
+        [usersCollFields.timerLength.name]: 0,
+        [usersCollFields.timerEnd.name]: Date.now(),
+      }),
+      utils.updateUserFieldsForUser(loser, {
+        [usersCollFields.encounterResult.name]: result * -1,
+        [usersCollFields.status.name]: 'deciding',
+        [usersCollFields.substatus.name]: 'post-loss',
+        [usersCollFields.timerLength.name]: 0,
+        [usersCollFields.timerEnd.name]: Date.now(),
+      })
+  ])
 }

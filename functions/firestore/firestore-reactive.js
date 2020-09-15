@@ -19,6 +19,7 @@ exports.onUserUpdated = firestore
           .doc(`${Date.now()}_${before.action}`)
           .set({
             ...before,
-            action: before.action
+            action: before.action,
+            actionTime: Date.now()
           })
     })

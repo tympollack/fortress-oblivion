@@ -19,7 +19,7 @@
             dark
             outlined
             v-model="playerResult"
-            :rules="[rules.required, rules.integer]"
+            :rules="[rules.integer]"
             label="Your Authority"
         ></v-text-field></v-flex>
         <v-spacer></v-spacer>
@@ -28,7 +28,7 @@
             dark
             outlined
             v-model="opponentResult"
-            :rules="[rules.required, rules.integer]"
+            :rules="[rules.integer]"
             :label="`${opponent}'s Authority`"
         ></v-text-field></v-flex>
         <v-spacer></v-spacer>
@@ -70,7 +70,7 @@
       valid: true,
       rules: {
         required: v => !!v || 'Required',
-        integer: v => (!isNaN(v) && Number.isInteger(Number(v))) && Number(v) !== 0 || 'Must be a non-zero integer',
+        integer: v => (!isNaN(v) && Number.isInteger(Number(v))) || 'Must be an integer',
       }
     }),
 
@@ -84,7 +84,7 @@
         const { playerResult, opponentResult } = this
         return isValid(playerResult)
             && isValid(opponentResult)
-            && (playerResult < 0 || opponentResult < 0)
+            && (playerResult <= 0 || opponentResult <= 0)
             ? playerResult - opponentResult
             : 0
       }

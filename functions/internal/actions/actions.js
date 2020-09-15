@@ -409,6 +409,7 @@ async function seekEncounter(req) {
 
     const gameId = [Date.now(), ...[userId, queuedUserId].sort()].join('_')
     promises.push(encountersCollRef.doc(gameId).set({
+      [encountersCollConfig.id.name]: gameId,
       [encountersCollFields.format.name]: chooseRandomEncounterFormat(user.expansionsOwned, queuedUser.expansionsOwned),
       [encountersCollFields.player1.name]: user,
       [encountersCollFields.player1Id.name]: userId,
@@ -424,7 +425,7 @@ async function seekEncounter(req) {
       [usersCollFields.status.name]: 'fighting',
     }
     promises.push(updateUserFields(req, fightingUpdateObj))
-    promises.push(updateUserFieldsForUser(queuedUser, fightingUpdateObj))
+    promises.push(utils.updateUserFieldsForUser(queuedUser, fightingUpdateObj))
   }
 
   await Promise.all(promises)
@@ -479,7 +480,7 @@ async function reportResult(req, res) {
     [encountersCollFields.winner.name]: playerWon ? id : opponentId,
     [encountersCollFields.loser.name]: playerWon ? opponentId : id,
   })
-  await updateUserFieldsForUser(opponentId === encounter.player1Id ? encounter.player1 : encounter.player2, {
+  await utils.updateUserFieldsForUser(opponentId === encounter.player1Id ? encounter.player1 : encounter.player2, {
     [usersCollFields.status.name]: 'deciding',
     [usersCollFields.substatus.name]: 'post-encounter',
     [usersCollFields.encounterResult.name]: result * -1
@@ -553,20 +554,5 @@ function getRandomSubstring(str, minChars, maxChars, mustHaves) {
 }
 
 async function updateUserFields(req, updatedFields) {
-  return await updateUserFieldsForUser(req.playerUser, updatedFields)
-}
-
-async function updateUserFieldsForUser(user, updatedFields) {
-  const updatedOptions = utils.getOptions({
-    ...user,
-    ...updatedFields // overlay updated values onto user copy
-  })
-  const fieldMap = {
-    [usersCollFields.health.name]: user.health,
-    ...updatedFields,
-    ...updatedOptions,
-    [usersCollFields.action.name]: user.action
-  }
-  await usersCollRef.doc(user.id).update(fieldMap)
-  return { ...user, ...fieldMap}
+  return await utils.updateUserFieldsForUser(req.playerUser, updatedFields)
 }

@@ -1,4 +1,10 @@
+const config = require('../config/config').get()
 const db = require('../firestore/init')
+
+const collectionsConfig = config.firestore.collections
+const usersCollConfig = collectionsConfig.users
+const usersCollFields = usersCollConfig.fields
+const usersCollRef = db.collection(usersCollConfig.name)
 
 exports.newPromise = promise => {
   return new Promise((resolve, reject) => {
@@ -90,6 +96,21 @@ exports.validateFirebaseIdToken = async (req, res, next) => {
     console.error('Error while verifying Firebase ID token:', error)
     res.status(403).send('Unauthorized')
   }
+}
+
+exports.updateUserFieldsForUser = async (user, updatedFields) => {
+  const updatedOptions = this.getOptions({
+    ...user,
+    ...updatedFields // overlay updated values onto user copy
+  })
+  const fieldMap = {
+    health: user.health,
+    ...updatedFields,
+    ...updatedOptions,
+    action: user.action
+  }
+  await usersCollRef.doc(user.id).update(fieldMap)
+  return { ...user, ...fieldMap}
 }
 
 exports.getOptions = user => {

@@ -47,6 +47,61 @@
         </v-row>
       </template>
     </template>
+
+    <br />
+    <br />
+    <br />
+    <v-divider></v-divider>
+    <br />
+    <br />
+    <br />
+
+    <v-row>
+      <v-select
+          dark
+          label="Resolve Dispute"
+          :items="disputedEncounters"
+          item-text="desc"
+          item-value="id"
+          v-model="managedEncounter"
+          return-object
+      ></v-select>
+    </v-row>
+    <br />
+
+    <template v-if="managedEncounter.id">
+      <v-row>
+        <v-spacer></v-spacer>
+        <v-flex xs12 sm4>
+          <v-select
+              dark
+              label="Winner"
+              :items="encounterPlayerList"
+              item-text="username"
+              item-value="id"
+              v-model="winnerId"
+          ></v-select>
+        </v-flex>
+        <v-spacer></v-spacer>
+        <v-flex xs12 sm4>
+          <v-text-field
+              dark
+              outlined
+              v-model="authDiff"
+              label="Authority Difference"
+          ></v-text-field>
+        </v-flex>
+        <v-spacer></v-spacer>
+      </v-row>
+      <v-row class="mb-5">
+        <AppButton
+            :disabled="!authDiff || !winnerId"
+            :loading="loading.MANAGE_ENCOUNTER"
+            @click="resolveDispute()"
+        >Resolve Dispute</AppButton>
+      </v-row>
+    </template>
+
     <br />
     <br />
     <br />
@@ -93,7 +148,13 @@
     data: () => ({
       allPlayers: [],
       managedPlayer: {},
+      disputedEncounters: [],
+      managedEncounter: {},
+      winnerId: '',
+      authDiff: 0,
       loading: {
+        ENCOUNTER_LIST: false,
+        MANAGE_ENCOUNTER: false,
         MANAGE_PLAYER: false,
         PLAYER_LIST: false,
         RESET_DATABASE: false
@@ -105,18 +166,16 @@
     }),
 
     async created() {
-      this.loading.PLAYER_LIST = true
-      await this.$firebase.firestore()
-          .collection('users')
-          .orderBy('username')
-          .onSnapshot(users => {
-            const players = []
-            users.forEach(u => {
-              players.push(u.data())
-            })
-            this.allPlayers = players
-          })
-      this.loading.PLAYER_LIST = false
+      await Promise.all([
+          this.loadDisputedEncounterList(),
+          this.loadPlayerList(),
+      ])
+    },
+
+    computed: {
+      encounterPlayerList() {
+        return [this.managedEncounter.player1, this.managedEncounter.player2]
+      }
     },
 
     methods: {
@@ -134,12 +193,75 @@
         this.loading.MANAGE_PLAYER = false
       },
 
+      getEncounterString(encounterData) {
+        const { player1Id, player1, player2, result, format, playPace, start, end, winner, loser } = encounterData
+        const formatDate = (time) => this.$moment(time).format('MM/DD/YYYY')
+        const didPlayer1Win = player1Id === winner
+        const winnerName = didPlayer1Win ? player1.username : player2.username
+        const loserName = didPlayer1Win ? player2.username : player1.username
+        return `${winnerName} over ${loserName} by ${result}; ${format}; ${playPace}; ${formatDate(start)} - ${formatDate(end)}`
+      },
+
+      async loadDisputedEncounterList() {
+        this.loading.ENCOUNTER_LIST = true
+        await this.$firebase.firestore()
+            .collection('world')
+            .doc('state')
+            .collection('encounters')
+            .where('resultDisputed', '==', true)
+            .onSnapshot(encounters => {
+              const encounterList = []
+              encounters.forEach(e => {
+                const data = e.data()
+                if (!data.disputeResolvedBy) {
+                  encounterList.push({
+                    ...data,
+                    id: e.id,
+                    desc: this.getEncounterString(data)
+                  })
+                }
+              })
+              this.disputedEncounters = encounterList
+            })
+        this.loading.ENCOUNTER_LIST = false
+      },
+
+      async loadPlayerList() {
+        this.loading.PLAYER_LIST = true
+        await this.$firebase.firestore()
+            .collection('users')
+            .orderBy('username')
+            .onSnapshot(users => {
+              const players = []
+              users.forEach(u => {
+                players.push(u.data())
+              })
+              this.allPlayers = players
+            })
+        this.loading.PLAYER_LIST = false
+      },
+
       async resetDatabase() {
         if (!this.needsConfirmation.RESET_DATABASE) return
         this.loading.RESET_DATABASE = true
         await this.$functions('admin-service/reset-world')
         this.needsConfirmation.RESET_DATABASE = false
         this.loading.RESET_DATABASE = false
+      },
+
+      async resolveDispute() {
+        this.loading.MANAGE_ENCOUNTER = true
+
+        const { player1Id, player2Id } = this.managedEncounter
+        const loserId = this.winnerId === player1Id ? player2Id : player1Id
+
+        await this.$functions('admin-service/resolve-dispute', {
+          encounterId: this.managedEncounter.id,
+          winnerId: this.winnerId,
+          loserId,
+          result: this.authDiff
+        })
+        this.loading.MANAGE_ENCOUNTER = false
       }
     }
 

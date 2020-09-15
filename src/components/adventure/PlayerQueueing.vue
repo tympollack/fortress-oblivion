@@ -4,8 +4,9 @@
     <v-row justify="center"><h4 style="margin: 7px 0;">Finding game...</h4></v-row>
     <v-row justify="center"><h5>Elapsed time: {{ elapsedTime | duration('humanize') }}</h5></v-row>
     <br />
-    <v-row v-if="!debounce">
+    <v-row v-if="!disabled">
       <AppButton
+          :disabled="disabled"
           :loading="loading"
           @click="abandonQueue()"
       >abandon queue</AppButton>
@@ -25,9 +26,9 @@
     },
 
     data: () => ({
+      disabled: false,
       elapsedTime: 0,
       loading: false,
-      debounce: true
     }),
 
     props: {
@@ -39,7 +40,7 @@
 
     created() {
       this.computeElapsedTime()
-      setTimeout(() => this.debounce = false, 6660)
+      setTimeout(() => this.disabled = false, 6660)
     },
 
     methods: {
@@ -51,6 +52,7 @@
           console.error(e)
         }
         this.loading = false
+        this.disabled = true
       },
 
       computeElapsedTime() {
