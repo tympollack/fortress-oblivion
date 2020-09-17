@@ -1,9 +1,47 @@
 <template>
   <v-container>
     <v-row><h4 class="headline">Admin Functions</h4></v-row>
-    <br />
 
     <v-row>
+      <v-select
+        class="settings-select"
+        dark
+        multiple
+        label="Players to alert"
+        v-model="playersToMessage"
+        :items="allPlayers"
+        item-text="username"
+        item-value="id"
+        return-object
+        single-line
+        dense
+      >
+        <template v-slot:prepend-item>
+          <v-list-item ripple @click="toggleAllPlayersToMessage()">
+            <v-list-item-action>
+              <v-icon :color="playersToMessage.length > 0 ? 'red darken-3' : ''">{{ selectAllPlayersToMessageIcon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>Select All</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider class="mt-2"></v-divider>
+        </template>
+
+      </v-select>
+    </v-row>
+
+    <v-row><v-text-field dark v-model="alertToPlayers" label="Alert to players"></v-text-field></v-row>
+
+    <v-row>
+      <AppButton
+        :disabled="!alertToPlayers || !playersToMessage.length"
+        :loading="loading.SENDING_ALERT"
+        @click="sendMessageToPlayers()"
+      >Message Players</AppButton>
+    </v-row>
+
+    <v-row class="mt-5">
       <v-select
         dark
         label="Manage Player"
@@ -147,6 +185,8 @@
 
     data: () => ({
       allPlayers: [],
+      playersToMessage: [],
+      alertToPlayers: '',
       managedPlayer: {},
       disputedEncounters: [],
       managedEncounter: {},
@@ -157,7 +197,8 @@
         MANAGE_ENCOUNTER: false,
         MANAGE_PLAYER: false,
         PLAYER_LIST: false,
-        RESET_DATABASE: false
+        RESET_DATABASE: false,
+        SENDING_ALERT: false,
       },
       needsConfirmation: {
         DELETE_PLAYER: false,
@@ -175,10 +216,30 @@
     computed: {
       encounterPlayerList() {
         return [this.managedEncounter.player1, this.managedEncounter.player2]
-      }
+      },
+
+      areAllPlayersToMessageSelected() {
+        return this.playersToMessage.length === this.allPlayers.length
+      },
+
+      areSomePlayersToMessageSelected() {
+        return this.playersToMessage.length > 0 && !this.areAllPlayersToMessageSelected
+      },
+
+      selectAllPlayersToMessageIcon () {
+        if (this.areAllPlayersToMessageSelected) return 'mdi-close-box'
+        if (this.areSomePlayersToMessageSelected) return 'mdi-minus-box'
+        return 'mdi-checkbox-blank-outline'
+      },
     },
 
     methods: {
+      toggleAllPlayersToMessage() {
+        this.$nextTick(() => {
+          this.playersToMessage = this.areAllPlayersToMessageSelected ? [] : this.allPlayers.slice()
+        })
+      },
+
       async deletePlayer() {
         if (!this.needsConfirmation.DELETE_PLAYER) return
         this.loading.MANAGE_PLAYER = true
@@ -262,6 +323,17 @@
           result: this.authDiff
         })
         this.loading.MANAGE_ENCOUNTER = false
+      },
+
+      async sendMessageToPlayers() {
+        this.loading.SENDING_ALERT = true
+        await this.$functions('admin-service/send-player-alert', {
+          playerIds: this.playersToMessage.map(p => p.id),
+          message: this.alertToPlayers
+        })
+        this.playersToMessage = []
+        this.alertToPlayers = ''
+        this.loading.SENDING_ALERT = false
       }
     }
 

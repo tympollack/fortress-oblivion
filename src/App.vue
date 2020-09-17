@@ -1,5 +1,5 @@
 <template>
-  <v-app class="app" v-cloak>
+  <v-app class="app" v-cloak dark>
     <v-container fluid>
       <div v-if="userId === ''" /> <!--  //todo show a something waiting for auth call  -->
       <UserLogin v-else-if="!userId" />

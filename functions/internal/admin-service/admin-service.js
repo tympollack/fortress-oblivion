@@ -30,6 +30,7 @@ routes.post('/finish-player-timer', finishPlayerTimer)
 // routes.post('/rewind-player', resetWorld)
 routes.post('/delete-player', deletePlayer)
 routes.post('/resolve-dispute', resolveDispute)
+routes.post('/send-player-alert', sendPlayerAlert)
 
 module.exports = routes
 
@@ -109,6 +110,21 @@ async function resetWorld(req, res, next) {
   promises.push(utils.deleteCollection(db, 'world/state/queue'))
 
   await Promise.all(promises)
+}
+
+async function sendPlayerAlert(req) {
+  const { playerIds, message } = req.body.data
+  const batch = db.batch()
+
+  for (const id of playerIds) {
+    console.log(id)
+    batch.update(usersCollRef.doc(id + ''), {
+      [usersCollFields.playerAlert.name]: message,
+      [usersCollFields.playerAlertSeen.name]: false,
+    })
+  }
+
+  await batch.commit()
 }
 
 async function finishPlayerTimer(req) {

@@ -8,6 +8,8 @@
     ></MenuBar>
 
     <v-container fluid class="display-area" mt-5>
+      <PlayerAlert :value="showAlert" :player="player"></PlayerAlert>
+
   <!--  i know there's a better way to do this, but i forget right now, so this is temp solution  -->
       <AboutScreen v-if="screenName === SCREEN.ABOUT.name"></AboutScreen>
       <AdminScreen v-else-if="screenName === SCREEN.ADMIN.name && isAdmin"></AdminScreen>
@@ -32,13 +34,14 @@
 </template>
 
 <script>
-  import BottomNav from './BottomNav'
-  import MenuBar from './MenuBar'
-  import AdventureScreen from '../adventure/AdventureScreen'
   import AboutScreen from '../about/AboutScreen'
+  import AdminScreen from '../admin/AdminScreen'
+  import AdventureScreen from '../adventure/AdventureScreen'
+  import BottomNav from './BottomNav'
   import ChatScreen from '../chat/ChatScreen'
   import ChronicleScreen from '../chronicle/ChronicleScreen'
-  import AdminScreen from '../admin/AdminScreen'
+  import MenuBar from './MenuBar'
+  import PlayerAlert from './PlayerAlert'
   import SettingsScreen from '../settings/SettingsScreen'
 
   export default {
@@ -54,17 +57,19 @@
         SETTINGS: { name: 'settings', number: 0 },
       },
       screen: { name: 'adventure', number: 1 },
-      player: {}
+      player: {},
+      showAlert: false
     }),
 
     components: {
-      AdminScreen,
       AboutScreen,
+      AdminScreen,
       AdventureScreen,
       BottomNav,
       ChatScreen,
       ChronicleScreen,
       MenuBar,
+      PlayerAlert,
       SettingsScreen
     },
 
@@ -75,6 +80,7 @@
           .doc(id)
           .onSnapshot(doc => {
         this.player = doc.exists ? doc.data() : { id }
+        this.showAlert = this.player.playerAlert && !this.player.playerAlertSeen
       })
     },
 

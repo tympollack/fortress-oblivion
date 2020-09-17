@@ -30,6 +30,7 @@ routes.use(performanceWrapperMiddleware)
 // general
 routes.post('/generate-options', generateOptions)
 routes.post('/read-manual', markManualRead)
+routes.post('/see-alert', markAlertSeen)
 routes.post('/report-result', reportResult)
 routes.post('/confirm-result', confirmResult)
 routes.post('/dispute-result', disputeResult)
@@ -94,6 +95,7 @@ async function verifyOptionMiddleware(req, res, next) {
       'generate-options',
       'read-manual',
       'report-result',
+      'see-alert',
       'leave-bank',
       'deposit-gold',
       'withdraw-gold'
@@ -164,6 +166,10 @@ async function performanceWrapperMiddleware(req, res, next) {
 
 async function markManualRead(req) {
   return updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
+}
+
+async function markAlertSeen(req) {
+  return updateUserFields(req, { [usersCollFields.playerAlertSeen.name]: true })
 }
 
 async function visitTradingPost(req) {

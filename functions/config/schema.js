@@ -375,6 +375,30 @@ module.exports = {
             }
           },
 
+          playerAlert: {
+            doc: 'playerAlert',
+            name: {
+              format: String,
+              default: 'playerAlert'
+            },
+            path: {
+              format: String,
+              default: 'users/{playerAlert}'
+            }
+          },
+
+          playerAlertSeen: {
+            doc: 'playerAlertSeen',
+            name: {
+              format: String,
+              default: 'playerAlertSeen'
+            },
+            path: {
+              format: String,
+              default: 'users/{playerAlertSeen}'
+            }
+          },
+
           potion: {
             doc: 'potion hp amount',
             name: {
