@@ -534,8 +534,8 @@ function getTimerData(minutes = 0, message = '') {
 }
 
 function chooseRandomEncounterFormat(player1Expansions, player2Expansions) {
-  const commonBaseSets = 'V' + 'WR'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c))
-  const commonSets = 'G1BEHFC2KUALN'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c))
+  const commonBaseSets = 'V' + 'WR'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c)).join('')
+  const commonSets = 'G1BEHFC2KUALN'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c)).join('')
   return `${getRandomSubstring(commonBaseSets, 1, 1)}-${getRandomSubstring(commonSets, 0, 0, '1')}`
 }
 
