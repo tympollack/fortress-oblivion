@@ -2,8 +2,10 @@
   <dictionary name="tpollack">
     <words>
       <w>axios</w>
+      <w>homescreen</w>
       <w>signup</w>
       <w>substatus</w>
+      <w>webmanifest</w>
     </words>
   </dictionary>
 </component>

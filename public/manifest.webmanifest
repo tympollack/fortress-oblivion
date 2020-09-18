@@ -1,0 +1,23 @@
+{
+  "lang": "en",
+  "dir": "ltr",
+  "name": "Start Realms: Fortress Oblivion",
+  "short_name": "Fortress Oblivion",
+  "description": "Dungeon crawler RPG Star Realms companion app.",
+  "theme_color": "#f44336",
+  "background_color": "#182026",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/?utm_source=homescreen",
+  "icons": [
+    {
+      "src": "mobile_icon_192x192.png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "mobile_icon_512x512.png",
+      "sizes": "512x512"
+    }
+  ]
+}
