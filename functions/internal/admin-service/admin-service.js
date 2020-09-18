@@ -160,8 +160,10 @@ async function resolveDispute(req) {
     return ret
   }
 
-  const winner = await getPlayerVersionBeforeEncounter(winnerId)
-  const loser = await getPlayerVersionBeforeEncounter(loserId)
+  const [winner, loser] = await Promise.all([
+      getPlayerVersionBeforeEncounter(winnerId),
+      getPlayerVersionBeforeEncounter(loserId)
+  ])
 
   await Promise.all([
       encountersCollRef.doc(encounterId).update({
@@ -171,18 +173,22 @@ async function resolveDispute(req) {
         [encountersCollFields.loser.name]: loserId,
       }),
       utils.updateUserFieldsForUser(winner, {
+        ...winner,
         [usersCollFields.encounterResult.name]: result,
         [usersCollFields.status.name]: 'deciding',
         [usersCollFields.substatus.name]: 'post-win',
         [usersCollFields.timerLength.name]: 0,
-        [usersCollFields.timerEnd.name]: Date.now(),
+        [usersCollFields.timerEnd.name]: 0,
+        [usersCollFields.timerStart.name]: 0,
       }),
       utils.updateUserFieldsForUser(loser, {
+        ...loser,
         [usersCollFields.encounterResult.name]: result * -1,
         [usersCollFields.status.name]: 'deciding',
         [usersCollFields.substatus.name]: 'post-loss',
         [usersCollFields.timerLength.name]: 0,
-        [usersCollFields.timerEnd.name]: Date.now(),
+        [usersCollFields.timerEnd.name]: 0,
+        [usersCollFields.timerStart.name]: 0,
       })
   ])
 }
