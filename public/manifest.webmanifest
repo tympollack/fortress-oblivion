@@ -6,7 +6,7 @@
   "description": "Dungeon crawler RPG Star Realms companion app.",
   "theme_color": "#f44336",
   "background_color": "#182026",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
   "start_url": "/?utm_source=homescreen",
