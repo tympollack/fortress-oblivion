@@ -34,10 +34,6 @@ routes.post('/see-alert', markAlertSeen)
 routes.post('/report-result', reportResult)
 routes.post('/confirm-result', confirmResult)
 routes.post('/dispute-result', disputeResult)
-routes.post('/visit-bank', visitBank)
-routes.post('/leave-bank', leaveBank)
-routes.post('/deposit-gold', depositGold)
-routes.post('/withdraw-gold', withdrawGold)
 
 // village
 routes.post('/to-fortress', toFortress)
@@ -96,9 +92,6 @@ async function verifyOptionMiddleware(req, res, next) {
       'read-manual',
       'report-result',
       'see-alert',
-      'leave-bank',
-      'deposit-gold',
-      'withdraw-gold'
       ].includes(chosenOption)) {
     next()
     return
@@ -178,36 +171,6 @@ async function visitTradingPost(req) {
 
 async function leaveTradingPost(req) {
   return await updateUserFields(req, { [usersCollFields.substatus.name]: 'idle' })
-}
-
-async function visitBank(req) {
-  return await updateUserFields(req, { [usersCollFields.status.name]: 'banking' })
-}
-
-async function leaveBank(req) {
-  return await updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
-}
-
-async function depositGold(req) {
-  const { body, playerUser } = req
-  const { amount } = body.data
-  const { bank, gold } = playerUser
-  const trueAmount = isNaN(amount) || amount < 0 ? 0 : Math.min(amount, gold)
-  return await updateUserFields(req, {
-    [usersCollFields.bank.name]: bank + trueAmount,
-    [usersCollFields.gold.name]: gold - trueAmount,
-  })
-}
-
-async function withdrawGold(req) {
-  const { body, playerUser } = req
-  const { amount } = body.data
-  const { bank, gold } = playerUser
-  const trueAmount = isNaN(amount) || amount < 0 ? 0 : Math.min(amount, bank)
-  return await updateUserFields(req, {
-    [usersCollFields.bank.name]: bank - trueAmount,
-    [usersCollFields.gold.name]: gold + trueAmount,
-  })
 }
 
 async function generateOptions(req) {
@@ -314,7 +277,6 @@ async function embraceDeath(req) {
     ...getTimerData(10 * req.playerUser.level + 200, 'being dragged back to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
-    [usersCollFields.gold.name]: 0,
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.health.name]: 0,
     [usersCollFields.maxHealth.name]: 100,
@@ -509,13 +471,14 @@ async function disputeResult(req) {
 async function actOnEncounterResult(req, isConfirmed) {
   const { encounterId, encounterResult } = req.playerUser
   const fieldToUpdate = isConfirmed ? encountersCollFields.resultConfirmed : encountersCollFields.resultDisputed
-  return await updateUserFields(req, {
+  const ret = await updateUserFields(req, {
     [usersCollFields.status.name]: 'deciding',
     [usersCollFields.substatus.name]: encounterResult > 0 ? 'post-win' : 'post-loss'
   })
-  encountersCollRef.doc(encounterId).update({
+  await encountersCollRef.doc(encounterId).update({
     [fieldToUpdate.name]: true,
   })
+  return ret
 }
 
 function getUserById(id) {
