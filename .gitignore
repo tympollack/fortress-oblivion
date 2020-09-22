@@ -70,3 +70,7 @@ node_modules/
 
 # vue build dir
 dist/
+
+# intellij project file
+*.iml
+.idea
