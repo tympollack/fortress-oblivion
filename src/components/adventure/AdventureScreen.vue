@@ -16,7 +16,7 @@
       <PlayerInfo :player="player"></PlayerInfo>
 
       <PlayerDeciding
-          v-else-if="player.status === STATUS.DECIDING"
+          v-if="player.status === STATUS.DECIDING"
           :player="player"
       ></PlayerDeciding>
       <PlayerFighting
