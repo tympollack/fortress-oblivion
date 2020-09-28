@@ -22,7 +22,8 @@
 
     <v-btn @click="$emit('chat-click')">
       <span>Chat</span>
-      <v-icon>mdi-chat-remove</v-icon>
+      <v-icon class="hidden-lg-and-up">mdi-chat-remove</v-icon>
+      <v-icon class="hidden-sm-and-down">mdi-chat</v-icon>
     </v-btn>
   </v-bottom-navigation>
 </template>

@@ -18,6 +18,7 @@
         <v-flex xs12 sm4><v-text-field
             dark
             outlined
+            type="number"
             v-model="playerResult"
             :rules="[rules.integer]"
             label="Your Authority"
@@ -27,6 +28,7 @@
         <v-text-field
             dark
             outlined
+            type="number"
             v-model="opponentResult"
             :rules="[rules.integer]"
             :label="`${opponent}'s Authority`"

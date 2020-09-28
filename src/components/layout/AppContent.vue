@@ -7,7 +7,7 @@
         @settings-click="screen = SCREEN.SETTINGS"
     ></MenuBar>
 
-    <v-container fluid class="display-area" mt-5>
+    <v-container fluid class="display-area">
       <PlayerAlert :value="showAlert" :player="player"></PlayerAlert>
 
   <!--  i know there's a better way to do this, but i forget right now, so this is temp solution  -->
@@ -17,7 +17,10 @@
           v-else-if="screenName === SCREEN.ADVENTURE.name"
           :player="player"
       ></AdventureScreen>
-      <ChatScreen v-else-if="screenName === SCREEN.CHAT.name"></ChatScreen>
+      <ChatScreen
+          v-else-if="screenName === SCREEN.CHAT.name"
+          :player="player"
+      ></ChatScreen>
       <ChronicleScreen v-else-if="screenName === SCREEN.CHRONICLE.name"></ChronicleScreen>
       <SettingsScreen
           v-else-if="screenName === SCREEN.SETTINGS.name"
@@ -104,5 +107,7 @@
   .display-area {
     overflow-y: auto;
     overflow-x: hidden;
+    margin-top: 38px !important;
+    max-height: calc(94vh - 56px);
   }
 </style>

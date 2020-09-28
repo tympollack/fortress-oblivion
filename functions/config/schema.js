@@ -46,6 +46,39 @@ module.exports = {
 
   firestore: {
     collections: {
+      chat: {
+        name: {
+          format: String,
+          default: 'chat'
+        },
+
+        id: {
+          name: {
+            format: String,
+            default: 'id'
+          },
+          path: {
+            format: String,
+            default: 'users/{id}'
+          }
+        },
+
+        fields: {
+
+          action: {
+            doc: 'action taken',
+            name: {
+              format: String,
+              default: 'action'
+            },
+            path: {
+              format: String,
+              default: 'users/{action}'
+            }
+          },
+        }
+      },
+
       users: {
         name: {
           format: String,
@@ -74,18 +107,6 @@ module.exports = {
             path: {
               format: String,
               default: 'users/{action}'
-            }
-          },
-
-          bank: {
-            doc: 'gold banked by player',
-            name: {
-              format: String,
-              default: 'bank'
-            },
-            path: {
-              format: String,
-              default: 'users/{bank}'
             }
           },
 

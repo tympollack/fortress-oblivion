@@ -1,6 +1,10 @@
 const { config, db, utils } = module.parent.shareable
 const collectionsConfig = config.firestore.collections
 
+const chatCollConfig = collectionsConfig.chat
+const chatCollFields = chatCollConfig.fields
+const chatCollRef = db.collection(chatCollConfig.name)
+
 const usersCollConfig = collectionsConfig.users
 const usersCollFields = usersCollConfig.fields
 const usersCollRef = db.collection(usersCollConfig.name)
@@ -24,6 +28,8 @@ const routes = require('express').Router()
 routes.use(isAdminMiddleware)
 routes.use(performanceWrapperMiddleware)
 
+routes.post('/database-init', databaseInit)
+routes.post('/is-database-init', isDatabaseInit)
 routes.post('/reset-world', resetWorld)
 routes.post('/finish-player-timer', finishPlayerTimer)
 // routes.post('/ff-player', resetWorld)
@@ -31,6 +37,8 @@ routes.post('/finish-player-timer', finishPlayerTimer)
 routes.post('/delete-player', deletePlayer)
 routes.post('/resolve-dispute', resolveDispute)
 routes.post('/send-player-alert', sendPlayerAlert)
+
+routes.use(sendBack)
 
 module.exports = routes
 
@@ -53,22 +61,71 @@ async function isAdminMiddleware(req, res, next) {
     return
   }
 
-  const ret = await next()
-  if (!res.headersSent) {
-    res.status(200).json({data: ret || {}})
-  }
+  await next()
 }
 
 // should be last called
 async function performanceWrapperMiddleware(req, res, next) {
-  const start = Date.now();
-  await next()
+  const start = Date.now()
+  const ret = await next()
   console.log(req.path, 'finished in', Date.now() - start, 'ms')
+  return ret
+}
+
+// afterware
+async function sendBack(req, res, next) {
+  const { ret } = req
+  if (!res.headersSent) {
+    res.status(200).json({data: ret || {}})
+  }
+  await next()
 }
 
 /////////////////////////////////////////////////////////////////////
 
-async function resetWorld(req, res, next) {
+async function databaseInit() {
+  const time = Date.now()
+  const worldStateDocRef = this.$firebase.firestore().collection('world').doc('state')
+  const chatCollRef = this.$firebase.firestore().collection('chat')
+  const systemChatDocRef = chatCollRef.doc('system')
+  const publicChatDocRef = chatCollRef.doc('public')
+
+  await Promise.all([
+    worldStateDocRef.set({
+      initialized: time
+    }),
+    systemChatDocRef.set({
+      all: true,
+      pinned: true,
+      public: true,
+      restricted: true,
+      group: true,
+      title: 'System Alerts'
+    }),
+    systemChatDocRef.collection('messages').add({
+      content: `System has been initialized as of ${this.formatDate(time)}.`,
+      created: time,
+      sender: '💩',
+      senderId: 'system'
+    }),
+    publicChatDocRef.set({
+      all: true,
+      pinned: true,
+      public: true,
+      restricted: false,
+      group: true,
+      title: 'Public Chat'
+    })
+  ])
+}
+
+async function isDatabaseInit(req, res, next) {
+  const chatDoc = await chatCollRef.doc('system').get()
+  req.ret = { isDbInit: chatDoc.exists }
+  return await next()
+}
+
+async function resetWorld() {
   const users = await usersCollRef.get()
   const now = Date.now()
   const promises = []
@@ -80,7 +137,6 @@ async function resetWorld(req, res, next) {
     const user = doc.data()
     promises.push(docRef.set({
       action: 'reset',
-      bank: 0,
       chest: 0,
       created: now,
       equipment: [],
@@ -110,6 +166,7 @@ async function resetWorld(req, res, next) {
   promises.push(utils.deleteCollection(db, 'world/state/queue'))
 
   await Promise.all(promises)
+  return await next()
 }
 
 async function sendPlayerAlert(req) {
@@ -125,6 +182,7 @@ async function sendPlayerAlert(req) {
   }
 
   await batch.commit()
+  return await next()
 }
 
 async function finishPlayerTimer(req) {
@@ -134,12 +192,14 @@ async function finishPlayerTimer(req) {
     [usersCollFields.timerEnd.name]: Date.now(),
     [usersCollFields.timerLength.name]: 0
   })
+  return await next()
 }
 
 async function deletePlayer(req) {
   const { managedId } = req.body.data
   await utils.deleteCollection(db, `users/${managedId}/version-history`)
   await usersCollRef.doc(managedId).delete()
+  return await next()
 }
 
 async function resolveDispute(req) {
@@ -191,4 +251,5 @@ async function resolveDispute(req) {
         [usersCollFields.timerStart.name]: 0,
       })
   ])
+  return await next()
 }

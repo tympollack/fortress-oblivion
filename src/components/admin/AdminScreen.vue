@@ -125,6 +125,7 @@
           <v-text-field
               dark
               outlined
+              type="number"
               v-model="authDiff"
               label="Authority Difference"
           ></v-text-field>
@@ -149,9 +150,17 @@
     <br />
 
     <template>
+      <v-row class="mb-5">
+        <AppButton
+            :disabled="disabled.INIT_DB"
+            :loading="loading.MANAGE_DATABASE"
+            @click="initDb()"
+        >Initialize Database</AppButton>
+      </v-row>
+
       <v-row v-if="!needsConfirmation.RESET_DATABASE">
         <AppButton
-            :loading="loading.RESET_DATABASE"
+            :loading="loading.MANAGE_DATABASE"
             @click="needsConfirmation.RESET_DATABASE = true"
         >Reset Database</AppButton>
       </v-row>
@@ -159,13 +168,13 @@
       <template v-else>
         <v-row class="mb-5">
           <AppButton
-              :loading="loading.RESET_DATABASE"
+              :loading="loading.MANAGE_DATABASE"
               @click="needsConfirmation.RESET_DATABASE = false"
           >Cancel</AppButton>
         </v-row>
         <v-row>
           <AppButton
-              :loading="loading.RESET_DATABASE"
+              :loading="loading.MANAGE_DATABASE"
               @click="resetDatabase()"
           >Confirm Reset Database</AppButton>
         </v-row>
@@ -192,12 +201,15 @@
       managedEncounter: {},
       winnerId: '',
       authDiff: 0,
+      disabled: {
+        INIT_DB: false,
+      },
       loading: {
         ENCOUNTER_LIST: false,
         MANAGE_ENCOUNTER: false,
         MANAGE_PLAYER: false,
         PLAYER_LIST: false,
-        RESET_DATABASE: false,
+        MANAGE_DATABASE: false,
         SENDING_ALERT: false,
       },
       needsConfirmation: {
@@ -210,6 +222,7 @@
       await Promise.all([
           this.loadDisputedEncounterList(),
           this.loadPlayerList(),
+        this.checkDbInit()
       ])
     },
 
@@ -234,6 +247,10 @@
     },
 
     methods: {
+      formatDate(time) {
+        return this.$moment(time).format('YYYY-MM-DD HH:mm')
+      },
+
       toggleAllPlayersToMessage() {
         this.$nextTick(() => {
           this.playersToMessage = this.areAllPlayersToMessageSelected ? [] : this.allPlayers.slice()
@@ -255,12 +272,11 @@
       },
 
       getEncounterString(encounterData) {
-        const { player1Id, player1, player2, result, format, playPace, start, end, winner, loser } = encounterData
-        const formatDate = (time) => this.$moment(time).format('MM/DD/YYYY')
+        const { player1Id, player1, player2, result, format, playPace, start, end, winner } = encounterData
         const didPlayer1Win = player1Id === winner
         const winnerName = didPlayer1Win ? player1.username : player2.username
         const loserName = didPlayer1Win ? player2.username : player1.username
-        return `${winnerName} over ${loserName} by ${result}; ${format}; ${playPace}; ${formatDate(start)} - ${formatDate(end)}`
+        return `${winnerName} over ${loserName} by ${result}; ${format}; ${playPace}; ${this.formatDate(start)} - ${this.formatDate(end)}`
       },
 
       async loadDisputedEncounterList() {
@@ -302,12 +318,25 @@
         this.loading.PLAYER_LIST = false
       },
 
+      async checkDbInit() {
+        this.loading.MANAGE_DATABASE = true
+        const data = await this.$functions('admin-service/is-database-init')
+        this.disabled.INIT_DB = data.isDbInit
+        this.loading.MANAGE_DATABASE = false
+      },
+
+      async initDb() {
+        this.loading.MANAGE_DATABASE = true
+        await this.$functions('admin-service/database-init')
+        await this.checkDbInit()
+      },
+
       async resetDatabase() {
         if (!this.needsConfirmation.RESET_DATABASE) return
-        this.loading.RESET_DATABASE = true
+        this.loading.MANAGE_DATABASE = true
         await this.$functions('admin-service/reset-world')
         this.needsConfirmation.RESET_DATABASE = false
-        this.loading.RESET_DATABASE = false
+        this.loading.MANAGE_DATABASE = false
       },
 
       async resolveDispute() {

@@ -54,6 +54,8 @@
   }
 </script>
 
-<style scoped>
-
+<style>
+  html {
+    overflow: hidden !important;
+  }
 </style>
