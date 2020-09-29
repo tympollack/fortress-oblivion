@@ -15,24 +15,27 @@
     >
       <v-row>
         <v-spacer></v-spacer>
-        <v-flex xs12 sm4><v-text-field
-            dark
-            outlined
-            type="number"
-            v-model="playerResult"
-            :rules="[rules.integer]"
-            label="Your Authority"
-        ></v-text-field></v-flex>
+        <v-flex xs12 sm4>
+          <v-text-field
+              dark
+              outlined
+              inputmode="numeric"
+              v-model="playerResult"
+              :rules="[rules.integer]"
+              label="Your Authority"
+          ></v-text-field>
+        </v-flex>
         <v-spacer></v-spacer>
         <v-flex xs12 sm4>
-        <v-text-field
-            dark
-            outlined
-            type="number"
-            v-model="opponentResult"
-            :rules="[rules.integer]"
-            :label="`${opponent}'s Authority`"
-        ></v-text-field></v-flex>
+          <v-text-field
+              dark
+              outlined
+              inputmode="numeric"
+              v-model="opponentResult"
+              :rules="[rules.integer]"
+              :label="`${opponent}'s Authority`"
+          ></v-text-field>
+        </v-flex>
         <v-spacer></v-spacer>
       </v-row>
     </v-form>

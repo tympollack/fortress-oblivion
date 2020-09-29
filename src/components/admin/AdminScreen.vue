@@ -125,7 +125,7 @@
           <v-text-field
               dark
               outlined
-              type="number"
+              inputmode="numeric"
               v-model="authDiff"
               label="Authority Difference"
           ></v-text-field>

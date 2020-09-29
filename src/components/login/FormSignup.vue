@@ -16,6 +16,7 @@
         >
           <v-text-field
               v-model="email"
+              inputmode="email"
               :rules="[rules.required, rules.email]"
               label="Email"
               @keyup.enter="signupEmail()"
