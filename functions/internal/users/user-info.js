@@ -39,7 +39,7 @@ async function addUser(req, res) {
     chest: 0,
     created: now,
     equipment: [],
-    expansionsOwned: 'WRG1BEHFC2KUAMLN',
+    expansionsOwned: 'WRG1BEHFC2KUAMLNP',
     gold: 0,
     id,
     isAdmin: false,

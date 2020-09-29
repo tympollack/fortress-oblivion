@@ -140,7 +140,7 @@ async function resetWorld() {
       chest: 0,
       created: now,
       equipment: [],
-      expansionsOwned: user.expansionsOwned || 'WRG1BEHFC2KUAMLN',
+      expansionsOwned: user.expansionsOwned || 'WRG1BEHFC2KUAMLNP',
       gold: 0,
       id: user.id,
       isAdmin: user.isAdmin || false,
