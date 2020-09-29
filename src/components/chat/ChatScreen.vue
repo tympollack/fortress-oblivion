@@ -2,7 +2,7 @@
   <v-container fluid ma-0 pa-0>
 
     <ChatLayoutLarge
-      class="hidden-sm-and-down"
+      v-if="isLargePane"
       :username="player.username"
       :system-channels="systemChannels"
       :pinned-channels="pinnedChannels"
@@ -14,7 +14,7 @@
     ></ChatLayoutLarge>
 
     <ChatLayoutSmall
-      class="hidden-lg-and-up"
+      v-else
       :username="player.username"
       :system-channels="systemChannels"
       :pinned-channels="pinnedChannels"
@@ -59,6 +59,20 @@
       }
     },
 
+    computed: {
+      isLargePane() {
+        switch (this.$vuetify.breakpoint.name) {
+          case 'xs':
+          case 'sm':
+            return false
+          case 'md':
+          case 'lg':
+          case 'xl':
+            return true
+        }
+      },
+    },
+
     created() {
       this.loadChatList()
     },
@@ -71,7 +85,9 @@
 
       async onChatSelect(chat) {
         this.selectedChat = chat
-        await this.loadMessages(chat.id)
+        if ((chat || {}).id) {
+          await this.loadMessages(chat.id)
+        }
       },
 
       async loadChatList() {

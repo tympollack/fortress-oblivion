@@ -5,17 +5,11 @@
         <v-list
           dense
           dark
+          class="chat-list"
         >
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title>{{ username }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-
           <ChannelGroup :channels="systemChannels" @channel-click="$emit('chat-select', $event)"></ChannelGroup>
           <ChannelGroup :channels="pinnedChannels" @channel-click="$emit('chat-select', $event)"></ChannelGroup>
           <ChannelGroup :channels="otherChannels" @channel-click="$emit('chat-select', $event)"></ChannelGroup>
-
         </v-list>
       </v-col>
       <v-col sm="10">
@@ -72,5 +66,11 @@
 <style scoped>
   .scrollable {
     overflow-y: auto;
+  }
+
+  .chat-list {
+    width: 100%;
+    padding: 0;
+    background: #182026;
   }
 </style>

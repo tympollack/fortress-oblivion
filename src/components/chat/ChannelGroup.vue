@@ -1,5 +1,5 @@
 <template>
-  <v-list>
+  <v-list style="background: #182026">
     <v-divider v-if="channels.length"></v-divider>
     <v-list-item
       v-for="channel in channels"

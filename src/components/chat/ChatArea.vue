@@ -1,7 +1,7 @@
 <template>
   <v-container fluid pa-0 ma-0>
     <div class="chat-container" ref="chatContainer" @scroll="onScroll">
-      <div v-if="chatLoading" class="text-center ma-12">
+      <div v-if="chatLoading" class="text-center">
         <v-progress-circular
           rotate=270
           size=269
@@ -140,12 +140,17 @@
     margin-bottom: 3px;
   }
 
+  /*noinspection CssUnusedSymbol*/
   .message.own {
     text-align: right;
   }
 
   .message.center {
     text-align: center;
+  }
+
+  .message .content {
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .message.own .content {
