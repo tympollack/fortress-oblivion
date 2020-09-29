@@ -10,13 +10,13 @@ const db = require('./firestore/init')
 const utils = require('./util/utils')
 
 module.shareable = {
-    admin: admin,
-    config: config,
-    cors: cors,
-    db: db,
-    functions: functions,
+    admin,
+    config,
+    cors,
+    db,
+    functions,
     url: config.url.base + config.url.apiPath,
-    utils: utils,
+    utils,
 }
 
 function addExpressMiddleware(app) {

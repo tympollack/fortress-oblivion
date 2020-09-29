@@ -1,3 +1,4 @@
+const moment = require('moment')
 const { config, db, utils } = module.parent.shareable
 const collectionsConfig = config.firestore.collections
 
@@ -85,8 +86,7 @@ async function sendBack(req, res, next) {
 
 async function databaseInit() {
   const time = Date.now()
-  const worldStateDocRef = this.$firebase.firestore().collection('world').doc('state')
-  const chatCollRef = this.$firebase.firestore().collection('chat')
+  const worldStateDocRef = worldCollRef.doc(worldCollConfig.reserved.state + '')
   const systemChatDocRef = chatCollRef.doc('system')
   const publicChatDocRef = chatCollRef.doc('public')
 
@@ -103,7 +103,7 @@ async function databaseInit() {
       title: 'System Alerts'
     }),
     systemChatDocRef.collection('messages').add({
-      content: `System has been initialized as of ${this.formatDate(time)}.`,
+      content: `System has been initialized as of ${moment(time).format('YYYY-MM-DD HH:mm')}.`,
       created: time,
       sender: '💩',
       senderId: 'system'
