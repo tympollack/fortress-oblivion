@@ -16,6 +16,7 @@
       <AdventureScreen
           v-else-if="screenName === SCREEN.ADVENTURE.name"
           :player="player"
+          :is-player-updated-from-db.sync="isPlayerUpdatedFromDb"
       ></AdventureScreen>
       <ChatScreen
           v-else-if="screenName === SCREEN.CHAT.name"
@@ -61,7 +62,8 @@
       },
       screen: { name: 'adventure', number: 1 },
       player: {},
-      showAlert: false
+      showAlert: false,
+      isPlayerUpdatedFromDb: false
     }),
 
     components: {
@@ -82,8 +84,12 @@
           .collection('users')
           .doc(id)
           .onSnapshot(doc => {
-        this.player = doc.exists ? doc.data() : { id }
-        this.showAlert = this.player.playerAlert && !this.player.playerAlertSeen
+
+        this.$nextTick(() => {
+          this.player = doc.exists ? doc.data() : { id }
+          this.showAlert = this.player.playerAlert && !this.player.playerAlertSeen
+          this.isPlayerUpdatedFromDb = true
+        });
       })
     },
 

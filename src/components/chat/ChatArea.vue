@@ -1,15 +1,10 @@
 <template>
   <v-container fluid pa-0 ma-0>
     <div class="chat-container" ref="chatContainer" @scroll="onScroll">
-      <div v-if="chatLoading" class="text-center">
-        <v-progress-circular
-          rotate=270
-          size=269
-          width=5
-          color="red darken-3"
-          indeterminate
-        ></v-progress-circular>
-      </div>
+      <AppProgressCircular
+        v-if="chatLoading"
+        indeterminate
+      ></AppProgressCircular>
 
       <div v-else-if="!messages.length" class="message center"><span>No one has said anything yet.</span></div>
 
@@ -40,8 +35,14 @@
 </template>
 
 <script>
+  import AppProgressCircular from '../app/AppProgressCircular'
+
   export default {
     name: 'ChatArea',
+
+    components: {
+      AppProgressCircular
+    },
 
     props: {
       username: String,
@@ -56,7 +57,7 @@
     data: () => ({
       message: '',
       sendingMessage: false,
-      chatLoading: true
+      chatLoading: false
     }),
 
     computed: {

@@ -117,15 +117,16 @@ async function databaseInit() {
       title: 'Public Chat'
     })
   ])
+  next()
 }
 
 async function isDatabaseInit(req, res, next) {
   const chatDoc = await chatCollRef.doc('system').get()
   req.ret = { isDbInit: chatDoc.exists }
-  return await next()
+  next()
 }
 
-async function resetWorld() {
+async function resetWorld(req, res, next) {
   const users = await usersCollRef.get()
   const now = Date.now()
   const promises = []
@@ -166,10 +167,10 @@ async function resetWorld() {
   promises.push(utils.deleteCollection(db, 'world/state/queue'))
 
   await Promise.all(promises)
-  return await next()
+  next()
 }
 
-async function sendPlayerAlert(req) {
+async function sendPlayerAlert(req, res, next) {
   const { playerIds, message } = req.body.data
   const batch = db.batch()
 
@@ -182,27 +183,27 @@ async function sendPlayerAlert(req) {
   }
 
   await batch.commit()
-  return await next()
+  next()
 }
 
-async function finishPlayerTimer(req) {
+async function finishPlayerTimer(req, res, next) {
   const { managedId } = req.body.data
   await usersCollRef.doc(managedId).update({
     [usersCollFields.action.name]: 'ADMIN-finish-timer',
     [usersCollFields.timerEnd.name]: Date.now(),
     [usersCollFields.timerLength.name]: 0
   })
-  return await next()
+  next()
 }
 
-async function deletePlayer(req) {
+async function deletePlayer(req, res, next) {
   const { managedId } = req.body.data
   await utils.deleteCollection(db, `users/${managedId}/version-history`)
   await usersCollRef.doc(managedId).delete()
-  return await next()
+  next()
 }
 
-async function resolveDispute(req) {
+async function resolveDispute(req, res, next) {
   const { id, encounterId, winnerId, loserId, result } = req.body.data
   const getPlayerVersionBeforeEncounter = async (uid) => {
     const docs = await usersCollRef
@@ -251,5 +252,5 @@ async function resolveDispute(req) {
         [usersCollFields.timerStart.name]: 0,
       })
   ])
-  return await next()
+  next()
 }

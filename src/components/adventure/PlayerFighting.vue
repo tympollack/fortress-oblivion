@@ -96,6 +96,7 @@
     },
 
     async created() {
+      this.loading = true
       const encounterDoc = await this.$firebase.firestore()
           .collection('world')
           .doc('state')
@@ -103,6 +104,7 @@
           .doc(this.player.encounterId)
           .get()
       this.encounter = encounterDoc.data()
+      this.loading = false
     },
 
     methods: {
@@ -121,6 +123,7 @@
         this.loading = true
         try {
           await this.$functions('actions/report-result', { result: this.encounterResult })
+          this.$emit('action-taken')
         } catch(e) {
           console.error(e)
         }

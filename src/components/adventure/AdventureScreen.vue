@@ -15,22 +15,29 @@
     <template v-else>
       <PlayerInfo :player="player"></PlayerInfo>
 
-      <PlayerDeciding
+      <template v-if="isPlayerUpdatedFromDb">
+        <PlayerDeciding
           v-if="player.status === STATUS.DECIDING"
           :player="player"
-      ></PlayerDeciding>
-      <PlayerFighting
+          @action-taken="onActionTaken"
+        ></PlayerDeciding>
+        <PlayerFighting
           v-else-if="player.status === STATUS.FIGHTING"
           :player="player"
-      ></PlayerFighting>
-      <PlayerQueueing
+          @action-taken="onActionTaken"
+        ></PlayerFighting>
+        <PlayerQueueing
           v-else-if="player.status === STATUS.QUEUEING"
           :player="player"
-      ></PlayerQueueing>
-      <PlayerTiming
+          @action-taken="onActionTaken"
+        ></PlayerQueueing>
+        <PlayerTiming
           v-else-if="player.status === STATUS.TIMING"
           :player="player"
-      ></PlayerTiming>
+        ></PlayerTiming>
+      </template>
+
+      <AppProgressCircular v-else indeterminate></AppProgressCircular>
     </template>
   </v-row>
 </template>
@@ -38,6 +45,7 @@
 <script>
   import AboutScreen from '../about/AboutScreen'
   import AppButton from '../app/AppButton'
+  import AppProgressCircular from '../app/AppProgressCircular'
   import PlayerDeciding from './PlayerDeciding'
   import PlayerFighting from './PlayerFighting'
   import PlayerInfo from './PlayerInfo'
@@ -51,6 +59,7 @@
     components: {
       AboutScreen,
       AppButton,
+      AppProgressCircular,
       PlayerDeciding,
       PlayerFighting,
       PlayerInfo,
@@ -60,6 +69,7 @@
     },
 
     props: {
+      isPlayerUpdatedFromDb: Boolean,
       player: {
         type: Object,
         required: true
@@ -86,6 +96,10 @@
           console.error(e)
         }
         this.loading = false
+      },
+
+      onActionTaken() {
+        this.$emit('update:isPlayerUpdatedFromDb', false)
       }
     }
   }

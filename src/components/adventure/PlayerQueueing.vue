@@ -48,6 +48,7 @@
         this.loading = true
         try {
           await this.$functions('actions/abandon-queue')
+          this.$emit('action-taken')
         } catch(e) {
           console.error(e)
         }

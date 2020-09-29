@@ -42,10 +42,11 @@
         this.loading = true
         try {
           await this.$functions(`actions/${this.player.options[optionIndex].apiPath}`)
+          this.$emit('action-taken')
         } catch(e) {
           console.error(e)
         }
-        setTimeout(() => this.loading = false, 777)
+        this.loading = false
       }
     }
   }

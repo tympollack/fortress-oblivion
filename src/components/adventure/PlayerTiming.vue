@@ -2,23 +2,21 @@
   <v-container>
     <v-row justify="center"><h4>{{ player.timerMessage | capitalize({ onlyFirstLetter: true }) }}</h4></v-row>
 
-    <v-row justify="center">
-      <div class="text-center ma-12">
-        <v-progress-circular
-            rotate=270
-            size=269
-            :value="timerPercent"
-            width=5
-            color="red darken-3"
-        >{{ timeRemaining | duration('humanize') }}</v-progress-circular>
-      </div>
+    <v-row justify="center" class="mt-12">
+      <AppProgressCircular :value="timerPercent">{{ timeRemaining | duration('humanize') }}</AppProgressCircular>
     </v-row>
   </v-container>
 </template>
 
 <script>
+  import AppProgressCircular from '../app/AppProgressCircular'
+
   export default {
     name: 'PlayerTiming',
+
+    components: {
+      AppProgressCircular
+    },
 
     props: {
       player: {
