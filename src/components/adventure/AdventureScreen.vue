@@ -4,13 +4,7 @@
 
     <UsernamePrompt v-else-if="!player.username"></UsernamePrompt>
 
-    <div v-else-if="player.status === STATUS.ABOUT">
-      <AboutScreen></AboutScreen>
-      <AppButton
-          :loading="loading"
-          @click="markManualRead"
-      >Got it</AppButton>
-    </div>
+    <AdventureAbout v-else-if="player.status === STATUS.ABOUT"></AdventureAbout>
 
     <template v-else>
       <PlayerInfo :player="player"></PlayerInfo>
@@ -43,8 +37,7 @@
 </template>
 
 <script>
-  import AboutScreen from '../about/AboutScreen'
-  import AppButton from '../app/AppButton'
+  import AdventureAbout from './AdventureAbout'
   import AppProgressCircular from '../app/AppProgressCircular'
   import PlayerDeciding from './PlayerDeciding'
   import PlayerFighting from './PlayerFighting'
@@ -57,8 +50,7 @@
     name: 'AdventureScreen',
 
     components: {
-      AboutScreen,
-      AppButton,
+      AdventureAbout,
       AppProgressCircular,
       PlayerDeciding,
       PlayerFighting,
@@ -84,20 +76,9 @@
         QUEUEING: 'queueing',
         TIMING: 'timing',
       },
-      loading: false
     }),
 
     methods: {
-      async markManualRead() {
-        this.loading = true
-        try {
-          await this.$functions('actions/read-manual')
-        } catch(e) {
-          console.error(e)
-        }
-        this.loading = false
-      },
-
       onActionTaken() {
         this.$emit('update:isPlayerUpdatedFromDb', false)
       }

@@ -1,10 +1,10 @@
 <template>
   <v-container>
     <v-row><p>To enter the Fortress Oblivion, you must present a Star Realms username.</p></v-row>
-    <v-row><h4 class="headline text-xs-center">{{ errorMessage }}</h4></v-row>
+    <AppErrorMessage :message="errorMessage"></AppErrorMessage>
     <br />
 
-    <v-row><v-text-field dark v-model="username" label="Star Realms IGN"></v-text-field></v-row>
+    <v-row><v-text-field dark autocomplete="off" v-model="username" label="Star Realms IGN"></v-text-field></v-row>
 
     <br />
     <v-row>
@@ -18,12 +18,14 @@
 
 <script>
   import AppButton from '../app/AppButton'
+  import AppErrorMessage from '../app/AppErrorMessage'
 
   export default {
     name: 'UsernamePrompt',
 
     components: {
-      AppButton
+      AppButton,
+      AppErrorMessage
     },
 
     data: () => ({
@@ -35,6 +37,7 @@
     methods: {
       async createUser() {
         this.loading = true
+        this.errorMessage = ''
         try {
           const userExistenceResponse = await this.$firebase.functions().httpsCallable(`api/users/exists/${this.username}`)()
           if (userExistenceResponse.data) {
@@ -43,7 +46,9 @@
             return
           }
 
-          await this.$functions('users/', { username: this.username })
+          const res = await this.$functions('users/', { username: this.username })
+          const { error } = res.data
+          this.errorMessage = error ? error : ''
         } catch (e) {
           console.error(e)
         }

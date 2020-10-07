@@ -50,7 +50,7 @@ async function addUser(req, res) {
     location: 'the village',
     maxHealth: 100,
     potion: 0,
-    restHealth: 0,
+    restHealth: 100,
     status: 'about',
     substatus: 'idle',
     timerEnd: now,

@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <AppErrorMessage :message="errorMessage"></AppErrorMessage>
     <v-row class="mb-5"><h3>You have encountered <span class="red--text text--darken-3">{{ opponent }}</span>, FIGHT!</h3></v-row>
 
     <v-row><h5>Format</h5></v-row>
@@ -52,12 +53,14 @@
 
 <script>
   import AppButton from '../app/AppButton'
+  import AppErrorMessage from '../app/AppErrorMessage'
 
   export default {
     name: 'PlayerFighting',
 
     components: {
-      AppButton
+      AppButton,
+      AppErrorMessage
     },
 
     props: {
@@ -72,6 +75,7 @@
       playerResult: 0,
       opponentResult: 0,
       loading: false,
+      errorMessage: '',
       valid: true,
       rules: {
         required: v => !!v || 'Required',
@@ -118,14 +122,16 @@
 
       async reportResult() {
         this.validateForm()
-        if (!this.valid || !this.encounterResult) return
+        if (!this.valid || !this.encounterResult) {
+          return
+        }
 
         this.loading = true
-        try {
-          await this.$functions('actions/report-result', { result: this.encounterResult })
+        const res = await this.$functions('actions/report-result', { result: this.encounterResult })
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
+        if (!error) {
           this.$emit('action-taken')
-        } catch(e) {
-          console.error(e)
         }
         this.loading = false
       },

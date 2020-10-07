@@ -1,9 +1,7 @@
 <template>
   <v-container>
     <v-row justify="center"><h4>{{ player.optionsTitle | capitalize({ onlyFirstLetter: true }) }}</h4></v-row>
-    <v-row v-if="errorMessage" justify="center">
-      <h4>{{ errorMessage | capitalize({ onlyFirstLetter: true }) }}</h4>
-    </v-row>
+    <AppErrorMessage :message="errorMessage"></AppErrorMessage>
     <br />
     <v-row
         v-if="!loading"
@@ -22,12 +20,14 @@
 
 <script>
   import AppButton from '../app/AppButton'
+  import AppErrorMessage from '../app/AppErrorMessage'
 
   export default {
     name: 'PlayerDeciding',
 
     components: {
-      AppButton
+      AppButton,
+      AppErrorMessage
     },
 
     props: {

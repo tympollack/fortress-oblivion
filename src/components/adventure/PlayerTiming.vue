@@ -46,9 +46,10 @@
       },
 
       async callServer(clientMessage) {
-        try {
-          await this.$functions('actions/generate-options', { clientMessage })
-        } catch (e) {
+        const res = await this.$functions('actions/generate-options', { clientMessage })
+        const { error } = res.data
+        if (error) {
+          console.error('encountered an error calling the service, retrying in 10 seconds', error)
           setTimeout(() => this.callServer('retrying after 10 seconds'), 10000)
         }
       }

@@ -1,6 +1,7 @@
 <template>
   <v-container>
     <v-row><h4 class="headline">Admin Functions</h4></v-row>
+    <AppErrorMessage :message="errorMessage"></AppErrorMessage>
 
     <v-row>
       <v-select
@@ -48,7 +49,7 @@
         :disabled="!systemMessage"
         :loading="loading.SENDING_SYSTEM_MESSAGE"
         @click="sendSystemMessage()"
-      >Message Players</AppButton>
+      >Send System Message</AppButton>
     </v-row>
 
     <v-row class="mt-5">
@@ -195,11 +196,13 @@
 
 <script>
   import AppButton from '../app/AppButton'
+  import AppErrorMessage from '../app/AppErrorMessage'
 
   export default {
     name: 'AdminScreen',
     components: {
-      AppButton
+      AppButton,
+      AppErrorMessage
     },
 
     data: () => ({
@@ -212,6 +215,7 @@
       managedEncounter: {},
       winnerId: '',
       authDiff: 0,
+      errorMessage: '',
       disabled: {
         INIT_DB: false,
       },
@@ -270,16 +274,22 @@
       },
 
       async deletePlayer() {
-        if (!this.needsConfirmation.DELETE_PLAYER) return
+        if (!this.needsConfirmation.DELETE_PLAYER) {
+          return
+        }
         this.loading.MANAGE_PLAYER = true
-        await this.$functions('admin-service/delete-player', { managedId: this.managedPlayer.id })
+        const res = await this.$functions('admin-service/delete-player', { managedId: this.managedPlayer.id })
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
         this.needsConfirmation.DELETE_PLAYER = false
         this.loading.MANAGE_PLAYER = false
       },
 
       async finishTimer() {
         this.loading.MANAGE_PLAYER = true
-        await this.$functions('admin-service/finish-player-timer', { managedId: this.managedPlayer.id })
+        const res = await this.$functions('admin-service/finish-player-timer', { managedId: this.managedPlayer.id })
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
         this.loading.MANAGE_PLAYER = false
       },
 
@@ -332,21 +342,29 @@
 
       async checkDbInit() {
         this.loading.MANAGE_DATABASE = true
-        const data = await this.$functions('admin-service/is-database-init')
-        this.disabled.INIT_DB = data.isDbInit
+        const res = await this.$functions('admin-service/is-database-init')
+        const { error, isDbInit } = res.data
+        this.errorMessage = error ? error : ''
+        this.disabled.INIT_DB = isDbInit
         this.loading.MANAGE_DATABASE = false
       },
 
       async initDb() {
         this.loading.MANAGE_DATABASE = true
-        await this.$functions('admin-service/database-init')
-        await this.checkDbInit()
+        const res = this.$functions('admin-service/database-init')
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
+        if (!error) {
+          await this.checkDbInit()
+        }
       },
 
       async resetDatabase() {
         if (!this.needsConfirmation.RESET_DATABASE) return
         this.loading.MANAGE_DATABASE = true
-        await this.$functions('admin-service/reset-world')
+        const res = await this.$functions('admin-service/reset-world')
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
         this.needsConfirmation.RESET_DATABASE = false
         this.loading.MANAGE_DATABASE = false
       },
@@ -357,32 +375,42 @@
         const { player1Id, player2Id } = this.managedEncounter
         const loserId = this.winnerId === player1Id ? player2Id : player1Id
 
-        await this.$functions('admin-service/resolve-dispute', {
+        const res = await this.$functions('admin-service/resolve-dispute', {
           encounterId: this.managedEncounter.id,
           winnerId: this.winnerId,
           loserId,
           result: this.authDiff
         })
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
         this.loading.MANAGE_ENCOUNTER = false
       },
 
       async sendMessageToPlayers() {
         this.loading.SENDING_ALERT = true
-        await this.$functions('admin-service/send-player-alert', {
+        const res = await this.$functions('admin-service/send-player-alert', {
           playerIds: this.playersToMessage.map(p => p.id),
           message: this.alertToPlayers
         })
-        this.playersToMessage = []
-        this.alertToPlayers = ''
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
+        if (!error) {
+          this.playersToMessage = []
+          this.alertToPlayers = ''
+        }
         this.loading.SENDING_ALERT = false
       },
 
       async sendSystemMessage() {
         this.loading.SENDING_SYSTEM_MESSAGE = true
-        await this.$functions('admin-service/send-system-message', {
+        const res = await this.$functions('admin-service/send-system-message', {
           message: this.systemMessage
         })
-        this.systemMessage = ''
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
+        if (!error) {
+          this.systemMessage = ''
+        }
         this.loading.SENDING_SYSTEM_MESSAGE = false
       }
     }

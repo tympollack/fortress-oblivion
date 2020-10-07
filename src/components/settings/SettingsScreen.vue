@@ -1,6 +1,7 @@
 <template>
   <v-container>
     <v-row><h4 class="headline">Settings</h4></v-row>
+    <AppErrorMessage :message="errorMessage"></AppErrorMessage>
 
     <v-row><TimezonePicker :selected.sync="timezone"></TimezonePicker></v-row>
 
@@ -43,6 +44,7 @@
 
 <script>
   import AppButton from '../app/AppButton'
+  import AppErrorMessage from '../app/AppErrorMessage'
   import TimezonePicker from './TimezonePicker'
 
   export default {
@@ -50,6 +52,7 @@
 
     components: {
       AppButton,
+      AppErrorMessage,
       TimezonePicker
     },
 
@@ -64,7 +67,8 @@
       loading: false,
       expansionList: ['W','R','G','1','B','E','H','F','C','2','K','U','A','M','L','N'],
       expansionsSelected: [],
-      timezone: ''
+      timezone: '',
+      errorMessage: ''
     }),
 
     computed: {
@@ -86,11 +90,13 @@
     methods: {
       async save() {
         this.loading = true
-        await this.$functions('users/save-settings', {
+        const res = await this.$functions('users/save-settings', {
           id: this.player.id,
           expansionsOwned: this.expansionsSelected.join(''),
           timezone: this.timezone
         })
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
         this.loading = false
       },
 

@@ -78,12 +78,12 @@ async function sendBack(req, res, next) {
   if (!res.headersSent) {
     res.status(200).json({data: ret || {}})
   }
-  await next()
+  next()
 }
 
 /////////////////////////////////////////////////////////////////////
 
-async function databaseInit() {
+async function databaseInit(req, res, next) {
   const time = Date.now()
   const worldStateDocRef = worldCollRef.doc(worldCollConfig.reserved.state + '')
   const systemChatDocRef = chatCollRef.doc('system')
@@ -150,7 +150,7 @@ async function resetWorld(req, res, next) {
       level: 1,
       location: 'the village',
       maxHealth: 100,
-      restHealth: 0,
+      restHealth: 100,
       potion: 0,
       status: 'about',
       substatus: 'idle',
