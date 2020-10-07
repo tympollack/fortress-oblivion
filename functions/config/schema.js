@@ -444,6 +444,18 @@ module.exports = {
             }
           },
 
+          restHealth: {
+            doc: 'health when started resting (used to track passive health gain)',
+            name: {
+              format: String,
+              default: 'restHealth'
+            },
+            path: {
+              format: String,
+              default: 'users/{restHealth}'
+            }
+          },
+
           status: {
             doc: 'status',
             name: {

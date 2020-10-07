@@ -1,5 +1,5 @@
 <template>
-  <div class="text-center">
+  <div class="text-center overflow-hidden" style="margin: 0 auto;">
     <v-progress-circular
       rotate=270
       size=269

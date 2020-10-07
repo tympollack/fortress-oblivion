@@ -1,6 +1,9 @@
 <template>
   <v-container>
     <v-row justify="center"><h4>{{ player.optionsTitle | capitalize({ onlyFirstLetter: true }) }}</h4></v-row>
+    <v-row v-if="errorMessage" justify="center">
+      <h4>{{ errorMessage | capitalize({ onlyFirstLetter: true }) }}</h4>
+    </v-row>
     <br />
     <v-row
         v-if="!loading"
@@ -10,6 +13,7 @@
           :loading="loading"
           :heading="option.heading"
           :subheading="option.subheading"
+          :disabled="option.disabled"
           @click="optionClick(i)"
       ></AppButton>
     </v-row>
@@ -34,17 +38,18 @@
     },
 
     data: () => ({
+      errorMessage: '',
       loading: false
     }),
 
     methods: {
       async optionClick(optionIndex) {
         this.loading = true
-        try {
-          await this.$functions(`actions/${this.player.options[optionIndex].apiPath}`)
+        const res = await this.$functions(`actions/${this.player.options[optionIndex].apiPath}`)
+        const { error } = res.data
+        this.errorMessage = error ? error : ''
+        if (!error) {
           this.$emit('action-taken')
-        } catch(e) {
-          console.error(e)
         }
         this.loading = false
       }

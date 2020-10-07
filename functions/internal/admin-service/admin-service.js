@@ -151,6 +151,7 @@ async function resetWorld(req, res, next) {
       level: 1,
       location: 'the village',
       maxHealth: 100,
+      restHealth: 0,
       potion: 0,
       status: 'about',
       substatus: 'idle',

@@ -117,8 +117,8 @@ exports.getOptions = user => {
 
   let optionsTitle = ''
   const options = []
-  const addOption = (apiPath, heading, subheading = '', value = 0) => {
-    options.push({ apiPath, heading, subheading, value })
+  const addOption = (apiPath, heading, subheading = '', value = 0, disabled = false) => {
+    options.push({ apiPath, heading, subheading, value, disabled })
   }
 
   const userWon = user.encounterResult > 0
@@ -140,15 +140,9 @@ exports.getOptions = user => {
       switch (user.substatus) {
         case 'trading':
           optionsTitle = 'welcome to the Trading Post'
-          if (user.gold >= 25) {
-            addOption('buy-plasma-bots', '5 plasma bots', '25g - reduce siphon potion time', { type: 'plasma bot', quantity: 5, price: 25 })
-            addOption('buy-repair-bots', '5 repair bots', '25g - reduced rest rate', { type: 'repair bot', quantity: 5, price: 25 })
-          }
-
-          if (user.gold >= 40) {
-            addOption('buy-defense-bots', '5 defense bots', '40g - reduce max hit point reduction', { type: 'defense bot', quantity: 5, price: 40 })
-          }
-
+          addOption('buy-plasma-bots', '5 plasma bots', '25g - reduce siphon potion time', { type: 'plasma bot', quantity: 5, price: 25 }, user.gold < 25)
+          addOption('buy-repair-bots', '5 repair bots', '25g - reduced rest rate', { type: 'repair bot', quantity: 5, price: 25 }, user.gold < 25)
+          addOption('buy-defense-bots', '5 defense bots', '40g - reduce max hit point reduction', { type: 'defense bot', quantity: 5, price: 40 }, user.gold < 40)
           addOption('leave-trading-post', 'leave', 'i\'m done here')
           break
 
@@ -185,7 +179,7 @@ exports.getOptions = user => {
           break
 
         default:
-          optionsTitle = `you are ${user.substatus.indexOf('resting') === 0 ? 'resting' : ''} inside Fortress Oblivion`
+          optionsTitle = `you are ${user.substatus.includes('resting') ? 'resting' : ''} inside Fortress Oblivion`
           if (user.hasKey) {
             addOption('climb-stairs', 'climb the stairs', `use your key to go upstairs`)
           }
@@ -198,7 +192,7 @@ exports.getOptions = user => {
             addOption('search-treasure', 'search for treasure', `let's find some gold`)
           }
 
-          if (user.gold && user.level % 3 === 0) {
+          if (user.level % 3 === 0) {
             addOption('visit-trading-post', 'visit the trading post', 'purchase equipment')
           }
 
@@ -211,9 +205,7 @@ exports.getOptions = user => {
           }
 
           if (user.level === 1 && !user.hasKey && !user.potion) {
-            if (user.gold >= 15) {
-              addOption('hire-convoy', 'hire a convoy bot', '15g - quicker trip to the village', 15)
-            }
+            addOption('hire-convoy', 'hire a convoy bot', '15g - quicker trip to the village', 15, user.gold < 15)
             addOption('to-village', 'return to the village', 'go heal up, takes lots of time')
           }
           break

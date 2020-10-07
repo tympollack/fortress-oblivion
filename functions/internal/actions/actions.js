@@ -25,7 +25,6 @@ routes.use(userWrapperMiddleware)
 routes.use(verifyOptionMiddleware)
 routes.use(verifyTimerMiddleware)
 routes.use(passiveHealingMiddleware)
-routes.use(performanceWrapperMiddleware)
 
 // general
 routes.post('/generate-options', generateOptions)
@@ -58,6 +57,9 @@ routes.post('/buy-plasma-bots', buyEquipment)
 routes.post('/buy-repair-bots', buyEquipment)
 routes.post('/buy-defense-bots', buyEquipment)
 routes.post('/take-rest', takeRest)
+routes.post('/no-op', noOperation)
+
+routes.use(sendBack)
 
 module.exports = routes
 
@@ -72,10 +74,7 @@ async function userWrapperMiddleware(req, res, next) {
   const user = await getUserById(id)
   if (user) {
     req.playerUser = user
-    const ret = await next()
-    if (!res.headersSent) {
-      res.status(200).json({ data: ret || {} })
-    }
+    next()
   } else {
     console.error('user id not found', id)
     res.status(404).send()
@@ -85,10 +84,15 @@ async function userWrapperMiddleware(req, res, next) {
 // requires req.playerUser
 // adds req.chosenOption
 async function verifyOptionMiddleware(req, res, next) {
+  req.start = Date.now();
   const chosenOption = req.path.substr(1)
+  const user = req.playerUser
+  user.action = chosenOption
+
   if ([
       'abandon-queue',
       'generate-options',
+      'no-op',
       'read-manual',
       'report-result',
       'see-alert',
@@ -96,9 +100,6 @@ async function verifyOptionMiddleware(req, res, next) {
     next()
     return
   }
-
-  const user = req.playerUser
-  user.action = chosenOption
 
   let encounter = {}
   if (user.encounterId) {
@@ -108,6 +109,7 @@ async function verifyOptionMiddleware(req, res, next) {
 
   const availableOptions = utils.getOptions(user, encounter)
   const isChosenOptionValid = availableOptions.options
+      .filter(o => !o.disabled)
       .map(o => o.apiPath)
       .includes(chosenOption)
 
@@ -117,7 +119,7 @@ async function verifyOptionMiddleware(req, res, next) {
   } else {
     const message = 'invalid option attempted'
     console.error(message, user.id, chosenOption, availableOptions)
-    res.status(400).send(`${message}, this event has been logged`)
+    sendError(res, `${message}, this event has been logged`)
   }
 }
 
@@ -133,26 +135,34 @@ async function verifyTimerMiddleware(req, res, next) {
   } else {
     const message = 'action attempted before timer expiry'
     console.error(message, user.id, req.path)
-    res.status(400).send(`${message}, this event has been logged`)
+    sendError(res, `${message}, this event has been logged`)
   }
 }
 
 async function passiveHealingMiddleware(req, res, next) {
   const user = req.playerUser
-  if (user.substatus.indexOf('resting') === 0) {
-    const restingRate = (user.substatus.indexOf('repair bot') > -1 ? 65 : 80) * 60 + 2 * user.level
+  const isUserInVillage = user.location === 'the village'
+  if (isUserInVillage || user.substatus.includes('resting')) {
+    const maxHealthGain = isUserInVillage ? user.maxHealth : 6
+    const restingRate = isUserInVillage
+        ? 10
+        : ((user.substatus.includes('repair bot') ? 65 : 80) + 2 * user.level)
+
     const timeSince = (Date.now() - user.timerEnd) / 1000
-    const gainedHealth = Math.min(Math.round(timeSince / restingRate), 6)
-    user.health = Math.min(user.health + gainedHealth, user.maxHealth)
+    const gainedHealth = Math.min(Math.round(timeSince / (restingRate * 60)), maxHealthGain)
+    const initHealth = typeof user.restHealth === 'undefined' ? user.health : user.restHealth
+    user.health = Math.min(initHealth + gainedHealth, user.maxHealth)
   }
   next()
 }
 
-// should be last called
-async function performanceWrapperMiddleware(req, res, next) {
-  const start = Date.now();
-  await next()
-  console.log(req.path, 'finished in', Date.now() - start, 'ms')
+// afterware
+async function sendBack(req, res, next) {
+  if (!res.headersSent) {
+    res.status(200).json({data: req.ret || {}})
+  }
+  console.log(req.path, 'finished in', Date.now() - req.start, 'ms')
+  next()
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -161,61 +171,73 @@ async function markManualRead(req) {
   return await updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
 }
 
-async function markAlertSeen(req) {
-  return await updateUserFields(req, { [usersCollFields.playerAlertSeen.name]: true })
+async function markAlertSeen(req, res, next) {
+  const val = await updateUserFields(req, { [usersCollFields.playerAlertSeen.name]: true })
+  doNext(req, res, next, val)
 }
 
-async function visitTradingPost(req) {
-  return await updateUserFields(req, { [usersCollFields.substatus.name]: 'trading' })
+async function visitTradingPost(req, res, next) {
+  const val = await updateUserFields(req, { [usersCollFields.substatus.name]: 'trading' })
+  doNext(req, res, next, val)
 }
 
-async function leaveTradingPost(req) {
-  return await updateUserFields(req, { [usersCollFields.substatus.name]: 'idle' })
+async function leaveTradingPost(req, res, next) {
+  const val = await updateUserFields(req, { [usersCollFields.substatus.name]: 'idle' })
+  doNext(req, res, next, val)
 }
 
-async function generateOptions(req) {
-  return await updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
+async function generateOptions(req, res, next) {
+  const val = await updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
+  doNext(req, res, next, val)
 }
 
-async function standGround(req) {
+async function noOperation(req, res, next) {
+  const val = await updateUserFields(req)
+  doNext(req, res, next, val)
+}
+
+async function standGround(req, res, next) {
   const { chest, equipment, health, maxHealth } = req.playerUser
   const optionValue = req.chosenOption.value
   const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
   const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
   const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
   const newHp = Math.min(Math.max(health - optionValue, 0), newMaxHp)
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: newHp,
     [usersCollFields.maxHealth.name]: newMaxHp,
     [usersCollFields.chest.name]: chest + Math.round(optionValue / 5)
   })
+  doNext(req, res, next, val)
 }
 
-async function retreatDownstairs(req) {
+async function retreatDownstairs(req, res, next) {
   const { equipment, health, level, maxHealth } = req.playerUser
   const hasEquipment = utils.hasEquipment(equipment, 'defense bot')
   const fieldMap = hasEquipment ? {[usersCollFields.equipment.name]: utils.subtractEquipment(equipment, 'defense bot')} : {}
   const newMaxHp = maxHealth - (hasEquipment ? 1 : 2)
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     ...fieldMap,
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: Math.min(health - req.chosenOption.value, newMaxHp),
     [usersCollFields.maxHealth.name]: newMaxHp,
     [usersCollFields.level.name]: level - 1
   })
+  doNext(req, res, next, val)
 }
 
-async function claimKey(req) {
-  return await updateUserFields(req, {
+async function claimKey(req, res, next) {
+  const val = await updateUserFields(req, {
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: true,
     [usersCollFields.chest.name]: req.playerUser.chest + Math.round(req.chosenOption.value / 4)
   })
+  doNext(req, res, next, val)
 }
 
-async function siphonPotion(req) {
+async function siphonPotion(req, res, next) {
   const { equipment } = req.playerUser
   const optionValue = req.chosenOption.value
   let timerValue = optionValue
@@ -225,79 +247,91 @@ async function siphonPotion(req) {
     timerValue /= 3
   }
 
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     ...fieldMap,
     ...getTimerData(timerValue, 'siphoning a potion.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.potion.name]: optionValue
   })
+  doNext(req, res, next, val)
 }
 
-async function drinkPotion(req) {
+async function drinkPotion(req, res, next) {
   const { health, maxHealth, potion } = req.playerUser
   const healAmount = Math.min(maxHealth - health, potion)
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     ...getTimerData(healAmount, 'drinking your potion.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.health.name]: health + healAmount,
     [usersCollFields.potion.name]: potion - healAmount
   })
+  doNext(req, res, next, val)
 }
 
-async function climbStairs(req) {
-  return await updateUserFields(req, {
+async function climbStairs(req, res, next) {
+  const val = await updateUserFields(req, {
     ...getTimerData(15, 'climbing the stairs.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.level.name]: req.playerUser.level + 1
   })
+  doNext(req, res, next, val)
 }
 
-async function searchTreasure(req) {
+async function searchTreasure(req, res, next) {
   const { chest, gold } = req.playerUser
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     ...getTimerData(5, 'searching for treasure.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.gold.name]: gold + chest
   })
+  doNext(req, res, next, val)
 }
 
-async function buyEquipment(req) {
+async function buyEquipment(req, res, next) {
   const { equipment, gold } = req.playerUser
   const { price, quantity, type } =  req.chosenOption.value
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     [usersCollFields.gold.name]: gold  - price,
     [usersCollFields.equipment.name]: utils.addEquipment(equipment, type, quantity)
   })
+  doNext(req, res, next, val)
 }
 
-async function embraceDeath(req) {
-  return await updateUserFields(req, {
+async function embraceDeath(req, res, next) {
+  const val = await updateUserFields(req, {
     ...getTimerData(10 * req.playerUser.level + 200, 'being dragged back to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.hasKey.name]: false,
     [usersCollFields.health.name]: 0,
     [usersCollFields.maxHealth.name]: 100,
+    [usersCollFields.restHealth.name]: 0,
     [usersCollFields.level.name]: 1,
     [usersCollFields.location.name]: 'the village',
     [usersCollFields.potion.name]: 0,
   })
+  doNext(req, res, next, val)
 }
 
-async function hireConvoy(req) {
-  return await updateUserFields(req, {
+async function hireConvoy(req, res, next) {
+  const { chosenOption, playerUser } = req
+  const { gold, health } = playerUser
+  const val = await updateUserFields(req, {
     ...getTimerData(10, 'riding to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.location.name]: 'the village',
-    [usersCollFields.gold.name]: req.playerUser.gold - req.chosenOption.value,
-    [usersCollFields.maxHealth.name]: 100
+    [usersCollFields.gold.name]: gold - chosenOption.value,
+    [usersCollFields.maxHealth.name]: 100,
+    [usersCollFields.restHealth.name]: health,
   })
+  doNext(req, res, next, val)
 }
 
-async function takeRest(req) {
+async function takeRest(req, res, next) {
   const { health, level, maxHealth, equipment } = req.playerUser
+  const resultantHealth = Math.min(health + 2, maxHealth)
   const equipmentType = 'repair bot'
   const hasEquipment = utils.hasEquipment(equipment, equipmentType)
   const fieldMap = {}
@@ -307,46 +341,49 @@ async function takeRest(req) {
     timeVal -= 15
   }
 
-  return await updateUserFields(req, {
+  const val = await updateUserFields(req, {
     ...fieldMap,
     ...getTimerData(timeVal * 2, 'resting in the fortress.'),
     [usersCollFields.substatus.name]: hasEquipment ? 'resting repair bot' : 'resting',
-    [usersCollFields.health.name]: Math.min(health + 2, maxHealth)
+    [usersCollFields.health.name]: resultantHealth,
+    [usersCollFields.restHealth.name]: resultantHealth,
   })
+  doNext(req, res, next, val)
 }
 
-async function hireLyle(req) {
-  const { gold, health, maxHealth, timerEnd } = req.playerUser
-  const passiveHeal = Math.max(Math.floor((Date.now() - timerEnd) / 10000), 0)
-  const currentHealth = Math.min(health + passiveHeal, maxHealth)
-  const activeHeal = Math.max(Math.min(maxHealth - currentHealth, req.chosenOption.value), 0)
-  return await updateUserFields(req, {
+async function hireLyle(req, res, next) {
+  const { gold, health, maxHealth } = req.playerUser
+  const activeHeal = Math.max(Math.min(maxHealth - health, req.chosenOption.value), 0)
+  const resultantHealth = health + activeHeal
+  const val = await updateUserFields(req, {
     ...getTimerData(0, 'being healed.'),
     [usersCollFields.gold.name]: gold - activeHeal,
-    [usersCollFields.health.name]: health + activeHeal
+    [usersCollFields.health.name]: resultantHealth,
+    [usersCollFields.restHealth.name]: resultantHealth,
   })
+  doNext(req, res, next, val)
 }
 
-async function toFortress(req) {
-  const { health, maxHealth, timerEnd } = req.playerUser
-  const passiveHeal = Math.floor((Date.now() - timerEnd) / (10 * 60 * 1000))
-  return await updateUserFields(req, {
+async function toFortress(req, res, next) {
+  const val = await updateUserFields(req, {
     ...getTimerData(10, 'heading to The Fortress Oblivion. Good luck..'),
     [usersCollFields.location.name]: 'fortress oblivion',
-    [usersCollFields.health.name]: Math.min(health + passiveHeal, maxHealth)
   })
+  doNext(req, res, next, val)
 }
 
-async function toVillage(req) {
-  return await updateUserFields(req, {
+async function toVillage(req, res, next) {
+  const val = await updateUserFields(req, {
     ...getTimerData(210, 'walking to the village.'),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.location.name]: 'the village',
-    [usersCollFields.maxHealth.name]: 100
+    [usersCollFields.maxHealth.name]: 100,
+    [usersCollFields.restHealth.name]: req.playerUser.health,
   })
+  doNext(req, res, next, val)
 }
 
-async function seekEncounter(req) {
+async function seekEncounter(req, res, next) {
   const user = req.playerUser
   const userId = req.playerUser.id
   const time = Date.now()
@@ -400,26 +437,28 @@ async function seekEncounter(req) {
   return ret
 }
 
-async function abandonQueue(req) {
+async function abandonQueue(req, res, next) {
   const { playerUser } = req
   const docRef = queueCollRef.doc(playerUser.id)
   const doc = await docRef.get()
+  let val = {}
   if (doc.exists) {
     await docRef.delete()
-    return await updateUserFields(req, {
+    val = await updateUserFields(req, {
       [usersCollFields.status.name]: 'deciding'
     })
   }
+  doNext(req, res, next, val)
 }
 
-async function reportResult(req, res) {
+async function reportResult(req, res, next) {
   const result = req.body.data.result
   const { encounterId, id } = req.playerUser
 
   if ((isNaN(result) || !Number.isInteger(Number(result))) || Number(result) === 0) {
     const message = 'result must be a non-zero integer'
     console.error(message, encounterId)
-    res.status(400).send(message)
+    sendError(res, message)
     return
   }
 
@@ -439,7 +478,7 @@ async function reportResult(req, res) {
   if (encounter.result) {
     const message = 'results already entered for encounter'
     console.error(message, encounterId)
-    res.status(400).send(message)
+    sendError(res, message)
     return
   }
 
@@ -455,15 +494,17 @@ async function reportResult(req, res) {
     [usersCollFields.encounterResult.name]: result * -1
   })
 
-  return ret
+  doNext(req, res, next, ret)
 }
 
-async function confirmResult(req) {
-  await actOnEncounterResult(req, true)
+async function confirmResult(req, res, next) {
+  const val = actOnEncounterResult(req, true)
+  doNext(req, res, next, val)
 }
 
-async function disputeResult(req) {
-  await actOnEncounterResult(req, false)
+async function disputeResult(req, res, next) {
+  const val = actOnEncounterResult(req, false)
+  doNext(req, res, next, val)
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -523,6 +564,15 @@ function getRandomSubstring(str, minChars, maxChars, mustHaves) {
   return chars.join('')
 }
 
-async function updateUserFields(req, updatedFields) {
+async function updateUserFields(req, updatedFields = {}) {
   return await utils.updateUserFieldsForUser(req.playerUser, updatedFields)
+}
+
+function doNext(req, res, next, val) {
+  req.ret = val
+  next()
+}
+
+function sendError(res, message) {
+  res.status(200).json({ data: { error: message } })
 }
