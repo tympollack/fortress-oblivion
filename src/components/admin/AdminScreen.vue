@@ -31,13 +31,23 @@
       </v-select>
     </v-row>
 
-    <v-row><v-text-field dark v-model="alertToPlayers" label="Alert to players"></v-text-field></v-row>
+    <v-row><v-text-field dark autocomplete="off" v-model="alertToPlayers" label="Alert to players"></v-text-field></v-row>
 
     <v-row>
       <AppButton
         :disabled="!alertToPlayers || !playersToMessage.length"
         :loading="loading.SENDING_ALERT"
         @click="sendMessageToPlayers()"
+      >Message Players</AppButton>
+    </v-row>
+
+    <v-row><v-text-field dark autocomplete="off" v-model="systemMessage" label="System message"></v-text-field></v-row>
+
+    <v-row>
+      <AppButton
+        :disabled="!systemMessage"
+        :loading="loading.SENDING_SYSTEM_MESSAGE"
+        @click="sendSystemMessage()"
       >Message Players</AppButton>
     </v-row>
 
@@ -196,6 +206,7 @@
       allPlayers: [],
       playersToMessage: [],
       alertToPlayers: '',
+      systemMessage: '',
       managedPlayer: {},
       disputedEncounters: [],
       managedEncounter: {},
@@ -211,6 +222,7 @@
         PLAYER_LIST: false,
         MANAGE_DATABASE: false,
         SENDING_ALERT: false,
+        SENDING_SYSTEM_MESSAGE: false,
       },
       needsConfirmation: {
         DELETE_PLAYER: false,
@@ -363,6 +375,15 @@
         this.playersToMessage = []
         this.alertToPlayers = ''
         this.loading.SENDING_ALERT = false
+      },
+
+      async sendSystemMessage() {
+        this.loading.SENDING_SYSTEM_MESSAGE = true
+        await this.$functions('admin-service/send-system-message', {
+          message: this.systemMessage
+        })
+        this.systemMessage = ''
+        this.loading.SENDING_SYSTEM_MESSAGE = false
       }
     }
 

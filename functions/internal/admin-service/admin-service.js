@@ -33,11 +33,10 @@ routes.post('/database-init', databaseInit)
 routes.post('/is-database-init', isDatabaseInit)
 routes.post('/reset-world', resetWorld)
 routes.post('/finish-player-timer', finishPlayerTimer)
-// routes.post('/ff-player', resetWorld)
-// routes.post('/rewind-player', resetWorld)
 routes.post('/delete-player', deletePlayer)
 routes.post('/resolve-dispute', resolveDispute)
 routes.post('/send-player-alert', sendPlayerAlert)
+routes.post('/send-system-message', sendSystemMessage)
 
 routes.use(sendBack)
 
@@ -168,6 +167,16 @@ async function resetWorld(req, res, next) {
   promises.push(utils.deleteCollection(db, 'world/state/queue'))
 
   await Promise.all(promises)
+  next()
+}
+
+async function sendSystemMessage(req, res, next) {
+  await chatCollRef.doc('system').collection('messages').add({
+    content: req.body.data.message,
+    created: Date.now(),
+    sender: '💩',
+    senderId: 'system'
+  })
   next()
 }
 
