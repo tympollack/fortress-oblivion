@@ -89,7 +89,12 @@
         const substatus = this.player.substatus.toLowerCase()
         if (location === 'fortress oblivion' && substatus.includes('resting')) {
           const baseTime = substatus.includes('repair bot') ? 65 : 80
-          this.gainedHealth = Math.min(this.computeGainedHealthOverTime(baseTime + 2 * this.player.level), 6)
+          if (this.gainedHealth < 6) {
+            this.gainedHealth = Math.min(this.computeGainedHealthOverTime(baseTime + 2 * this.player.level), 6)
+          }
+          if (this.gainedHealth >= 6) {
+            this.timeToNextPassiveHp = 0
+          }
           return
         }
 
