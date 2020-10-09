@@ -24,6 +24,7 @@ const routes = require('express').Router()
 routes.use(userWrapperMiddleware)
 routes.use(verifyOptionMiddleware)
 routes.use(verifyTimerMiddleware)
+routes.use(applyDeltaMiddleware)
 routes.use(passiveHealingMiddleware)
 
 // general
@@ -74,7 +75,10 @@ async function userWrapperMiddleware(req, res, next) {
   const user = await getUserById(id)
   if (user) {
     req.playerUser = user
-    next()
+    await next()
+    if (!res.headersSent) {
+      res.status(200).json({ data: {} })
+    }
   } else {
     console.error('user id not found', id)
     res.status(404).send()
@@ -139,6 +143,25 @@ async function verifyTimerMiddleware(req, res, next) {
   }
 }
 
+// requires req.playerUser
+async function applyDeltaMiddleware(req, res, next) {
+  const user = req.playerUser
+  const { delta, deltaApplied } = user
+  if (delta) {
+    if (deltaApplied) {
+      req.playerUser[usersCollFields.deltaMessage.name] = ''
+    } else {
+      req.playerUser = {
+        ...user,
+        ...delta,
+        [usersCollFields.deltaApplied.name]: true
+      }
+    }
+  }
+  next()
+}
+
+// requires req.playerUser
 async function passiveHealingMiddleware(req, res, next) {
   const user = req.playerUser
   const isUserInVillage = user.location === 'the village'
@@ -250,8 +273,10 @@ async function siphonPotion(req, res, next) {
   const val = await updateUserFields(req, {
     ...fieldMap,
     ...getTimerData(timerValue, 'siphoning a potion.'),
+    ...getDelta(`you got a potion for ${optionValue} health!`,{
+      [usersCollFields.potion.name]: optionValue
+    }),
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.potion.name]: optionValue
   })
   doNext(req, res, next, val)
 }
@@ -261,19 +286,24 @@ async function drinkPotion(req, res, next) {
   const healAmount = Math.min(maxHealth - health, potion)
   const val = await updateUserFields(req, {
     ...getTimerData(healAmount, 'drinking your potion.'),
+    ...getDelta(`you healed ${healAmount} health!`,{
+      [usersCollFields.health.name]: health + healAmount,
+      [usersCollFields.potion.name]: potion - healAmount
+    }),
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.health.name]: health + healAmount,
-    [usersCollFields.potion.name]: potion - healAmount
   })
   doNext(req, res, next, val)
 }
 
 async function climbStairs(req, res, next) {
+  const deltaLevel = req.playerUser.level + 1
   const val = await updateUserFields(req, {
     ...getTimerData(15, 'climbing the stairs.'),
+    ...getDelta(`you've reached level ${deltaLevel}!`,{
+      [usersCollFields.hasKey.name]: false,
+      [usersCollFields.level.name]: deltaLevel
+    }),
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.hasKey.name]: false,
-    [usersCollFields.level.name]: req.playerUser.level + 1
   })
   doNext(req, res, next, val)
 }
@@ -282,9 +312,11 @@ async function searchTreasure(req, res, next) {
   const { chest, gold } = req.playerUser
   const val = await updateUserFields(req, {
     ...getTimerData(5, 'searching for treasure.'),
+    ...getDelta(`you found ${chest} coins!`,{
+      [usersCollFields.chest.name]: 0,
+      [usersCollFields.gold.name]: gold + chest
+    }),
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.chest.name]: 0,
-    [usersCollFields.gold.name]: gold + chest
   })
   doNext(req, res, next, val)
 }
@@ -302,6 +334,7 @@ async function buyEquipment(req, res, next) {
 async function embraceDeath(req, res, next) {
   const val = await updateUserFields(req, {
     ...getTimerData(10 * req.playerUser.level + 200, 'being dragged back to the village.'),
+    ...getDelta(),
     [usersCollFields.substatus.name]: 'idle',
     [usersCollFields.chest.name]: 0,
     [usersCollFields.hasKey.name]: false,
@@ -320,11 +353,13 @@ async function hireConvoy(req, res, next) {
   const { gold, health } = playerUser
   const val = await updateUserFields(req, {
     ...getTimerData(10, 'riding to the village.'),
-    [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.location.name]: 'the village',
+    ...getDelta('', {
+      [usersCollFields.location.name]: 'the village',
+      [usersCollFields.maxHealth.name]: 100,
+      [usersCollFields.restHealth.name]: health,
+    }),
     [usersCollFields.gold.name]: gold - chosenOption.value,
-    [usersCollFields.maxHealth.name]: 100,
-    [usersCollFields.restHealth.name]: health,
+    [usersCollFields.substatus.name]: 'idle',
   })
   doNext(req, res, next, val)
 }
@@ -344,9 +379,11 @@ async function takeRest(req, res, next) {
   const val = await updateUserFields(req, {
     ...fieldMap,
     ...getTimerData(timeVal * 2, 'resting in the fortress.'),
-    [usersCollFields.substatus.name]: hasEquipment ? 'resting repair bot' : 'resting',
-    [usersCollFields.health.name]: resultantHealth,
-    [usersCollFields.restHealth.name]: resultantHealth,
+    ...getDelta(`you've restored 2 hp.`,{
+      [usersCollFields.substatus.name]: hasEquipment ? 'resting repair bot' : 'resting',
+      [usersCollFields.health.name]: resultantHealth,
+      [usersCollFields.restHealth.name]: resultantHealth,
+    })
   })
   doNext(req, res, next, val)
 }
@@ -357,6 +394,7 @@ async function hireLyle(req, res, next) {
   const resultantHealth = health + activeHeal
   const val = await updateUserFields(req, {
     ...getTimerData(0, 'being healed.'),
+    ...getDelta(`you have been healed for ${activeHeal} health!`),
     [usersCollFields.gold.name]: gold - activeHeal,
     [usersCollFields.health.name]: resultantHealth,
     [usersCollFields.restHealth.name]: resultantHealth,
@@ -367,7 +405,9 @@ async function hireLyle(req, res, next) {
 async function toFortress(req, res, next) {
   const val = await updateUserFields(req, {
     ...getTimerData(10, 'heading to The Fortress Oblivion. Good luck..'),
-    [usersCollFields.location.name]: 'fortress oblivion',
+    ...getDelta(`you reached the fortress unscathed.`, {
+      [usersCollFields.location.name]: 'fortress oblivion'
+    })
   })
   doNext(req, res, next, val)
 }
@@ -375,10 +415,12 @@ async function toFortress(req, res, next) {
 async function toVillage(req, res, next) {
   const val = await updateUserFields(req, {
     ...getTimerData(210, 'walking to the village.'),
+    ...getDelta(`you arrived in the village.`,{
+      [usersCollFields.location.name]: 'the village',
+      [usersCollFields.maxHealth.name]: 100,
+      [usersCollFields.restHealth.name]: req.playerUser.health,
+    }),
     [usersCollFields.substatus.name]: 'idle',
-    [usersCollFields.location.name]: 'the village',
-    [usersCollFields.maxHealth.name]: 100,
-    [usersCollFields.restHealth.name]: req.playerUser.health,
   })
   doNext(req, res, next, val)
 }
@@ -464,13 +506,6 @@ async function reportResult(req, res, next) {
 
   const playerWon = result > 0
   const opponentId = encounterId.split('_').slice(1).find(s => s !== id)
-
-  const ret = await updateUserFields(req, {
-    [usersCollFields.status.name]: 'deciding',
-    [usersCollFields.substatus.name]: playerWon ? 'post-win' : 'post-loss',
-    [usersCollFields.encounterResult.name]: result
-  })
-
   const encounterDocRef = encountersCollRef.doc(encounterId)
   const encounterDoc = await encounterDocRef.get()
   const encounter = encounterDoc.data()
@@ -482,19 +517,26 @@ async function reportResult(req, res, next) {
     return
   }
 
-  await encounterDocRef.update({
-    [encountersCollFields.end.name]: Date.now(),
-    [encountersCollFields.result.name]: Math.abs(result),
-    [encountersCollFields.winner.name]: playerWon ? id : opponentId,
-    [encountersCollFields.loser.name]: playerWon ? opponentId : id,
-  })
-  await utils.updateUserFieldsForUser(opponentId === encounter.player1Id ? encounter.player1 : encounter.player2, {
-    [usersCollFields.status.name]: 'deciding',
-    [usersCollFields.substatus.name]: 'post-encounter',
-    [usersCollFields.encounterResult.name]: result * -1
-  })
-
-  doNext(req, res, next, ret)
+  const [oppRet, encRet, userRet] = await Promise.all([
+    await utils.updateUserFieldsForUser(opponentId === encounter.player1Id ? encounter.player1 : encounter.player2, {
+      [usersCollFields.status.name]: 'deciding',
+      [usersCollFields.substatus.name]: 'post-encounter',
+      [usersCollFields.encounterResult.name]: result * -1
+    }),
+    await encounterDocRef.update({
+      [encountersCollFields.end.name]: Date.now(),
+      [encountersCollFields.result.name]: Math.abs(result),
+      [encountersCollFields.winner.name]: playerWon ? id : opponentId,
+      [encountersCollFields.loser.name]: playerWon ? opponentId : id,
+    }),
+    await updateUserFields(req, {
+      [usersCollFields.status.name]: 'deciding',
+      [usersCollFields.substatus.name]: playerWon ? 'post-win' : 'post-loss',
+      [usersCollFields.encounterResult.name]: result
+    })
+  ])
+  console.log(oppRet, encRet, userRet)
+  doNext(req, res, next, userRet)
 }
 
 async function confirmResult(req, res, next) {
@@ -544,6 +586,14 @@ function getTimerData(minutes = 0, message = '') {
   return ret
 }
 
+function getDelta(message = '', fieldMap = {}) {
+  return {
+    [usersCollFields.delta.name]: fieldMap,
+    [usersCollFields.deltaApplied.name]: !fieldMap || !Object.keys(fieldMap).length,
+    [usersCollFields.deltaMessage.name]: message,
+  }
+}
+
 function chooseRandomEncounterFormat(player1Expansions, player2Expansions) {
   const commonBaseSets = 'V' + 'WR'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c)).join('')
   const commonSets = 'G1BEHFC2KUALNP'.split('').filter(c => player1Expansions.includes(c) && player2Expansions.includes(c)).join('')
@@ -574,5 +624,7 @@ function doNext(req, res, next, val) {
 }
 
 function sendError(res, message) {
-  res.status(200).json({ data: { error: message } })
+  if (!res.headersSent) {
+    res.status(200).json({ data: { error: message } })
+  }
 }

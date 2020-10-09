@@ -134,6 +134,42 @@ module.exports = {
             }
           },
 
+          delta: {
+            doc: 'change of timed event',
+            name: {
+              format: String,
+              default: 'delta'
+            },
+            path: {
+              format: String,
+              default: 'users/{delta}'
+            }
+          },
+
+          deltaApplied: {
+            doc: 'has delta been applied',
+            name: {
+              format: String,
+              default: 'deltaApplied'
+            },
+            path: {
+              format: String,
+              default: 'users/{deltaApplied}'
+            }
+          },
+
+          deltaMessage: {
+            doc: 'description of change for user',
+            name: {
+              format: String,
+              default: 'deltaMessage'
+            },
+            path: {
+              format: String,
+              default: 'users/{deltaMessage}'
+            }
+          },
+
           equipment: {
             doc: 'array of player items held',
             name: {
@@ -166,18 +202,6 @@ module.exports = {
                 default: 'users/equipment/{type}'
               }
             },
-          },
-
-          fightingSince: {
-            doc: 'time started fight',
-            name: {
-              format: String,
-              default: 'fightingSince'
-            },
-            path: {
-              format: String,
-              default: 'users/{fightingSince}'
-            }
           },
 
           encounterId: {
@@ -214,6 +238,18 @@ module.exports = {
               format: String,
               default: 'users/{expansionsOwned}'
             },
+          },
+
+          fightingSince: {
+            doc: 'time started fight',
+            name: {
+              format: String,
+              default: 'fightingSince'
+            },
+            path: {
+              format: String,
+              default: 'users/{fightingSince}'
+            }
           },
 
           gold: {

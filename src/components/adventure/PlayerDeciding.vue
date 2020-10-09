@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <v-row v-if="player.deltaApplied && player.deltaMessage" justify="center"><h4>{{ player.deltaMessage | capitalize({ onlyFirstLetter: true }) }}</h4></v-row>
     <v-row justify="center"><h4>{{ player.optionsTitle | capitalize({ onlyFirstLetter: true }) }}</h4></v-row>
     <AppErrorMessage :message="errorMessage"></AppErrorMessage>
     <br />

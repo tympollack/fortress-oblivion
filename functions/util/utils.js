@@ -104,13 +104,12 @@ exports.updateUserFieldsForUser = async (user, updatedFields) => {
     ...updatedFields // overlay updated values onto user copy
   })
   const fieldMap = {
-    health: user.health,
+    ...user,
     ...updatedFields,
     ...updatedOptions,
-    action: user.action
   }
   await usersCollRef.doc(user.id).update(fieldMap)
-  return { ...user, ...fieldMap}
+  return { ...user, ...fieldMap }
 }
 
 exports.getOptions = user => {
@@ -213,7 +212,7 @@ exports.getOptions = user => {
       break
   }
 
-  return { options, optionsTitle}
+  return { options, optionsTitle }
 }
 
 exports.hasEquipment = (equipment, type) => {
