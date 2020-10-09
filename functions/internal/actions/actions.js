@@ -34,6 +34,7 @@ routes.post('/see-alert', markAlertSeen)
 routes.post('/report-result', reportResult)
 routes.post('/confirm-result', confirmResult)
 routes.post('/dispute-result', disputeResult)
+routes.post('/cancel-task', cancelTask)
 
 // village
 routes.post('/to-fortress', toFortress)
@@ -95,6 +96,7 @@ async function verifyOptionMiddleware(req, res, next) {
 
   if ([
       'abandon-queue',
+      'cancel-task',
       'generate-options',
       'no-op',
       'read-manual',
@@ -129,6 +131,13 @@ async function verifyOptionMiddleware(req, res, next) {
 
 // requires req.playerUser
 async function verifyTimerMiddleware(req, res, next) {
+  if ([
+    'cancel-task',
+  ].includes(req.playerUser.action)) {
+    next()
+    return
+  }
+
   const user = req.playerUser
   const timeSince = (Date.now() - user.timerStart) / 1000
   if (timeSince >= user.timerLength) {
@@ -145,6 +154,13 @@ async function verifyTimerMiddleware(req, res, next) {
 
 // requires req.playerUser
 async function applyDeltaMiddleware(req, res, next) {
+  if ([
+    'cancel-task',
+  ].includes(req.playerUser.action)) {
+    next()
+    return
+  }
+
   const user = req.playerUser
   const { delta, deltaApplied } = user
   if (delta) {
@@ -163,6 +179,13 @@ async function applyDeltaMiddleware(req, res, next) {
 
 // requires req.playerUser
 async function passiveHealingMiddleware(req, res, next) {
+  if ([
+    'cancel-task',
+  ].includes(req.playerUser.action)) {
+    next()
+    return
+  }
+
   const user = req.playerUser
   const isUserInVillage = user.location === 'the village'
   if (isUserInVillage || user.substatus.includes('resting')) {
@@ -211,6 +234,14 @@ async function leaveTradingPost(req, res, next) {
 
 async function generateOptions(req, res, next) {
   const val = await updateUserFields(req, { [usersCollFields.status.name]: 'deciding' })
+  doNext(req, res, next, val)
+}
+
+async function cancelTask(req, res, next) {
+  const val = await updateUserFields(req, {
+    ...getTimerData(),
+    ...getDelta()
+  })
   doNext(req, res, next, val)
 }
 
